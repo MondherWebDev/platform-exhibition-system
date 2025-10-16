@@ -7,46 +7,27 @@ import { processQRCodeScan, QRScanResult } from "../../../../utils/badgeService"
 import QRCodeScanner from "../../../../components/QRCodeScanner";
 import ClientOnly from '../../../../components/ClientOnly';
 
-// Icon component with dynamic loading to reduce bundle size
+// Simple Icon component using text symbols
 const Icon = ({ name, className = "w-4 h-4" }: { name: string; className?: string }) => {
-  const [iconComponent, setIconComponent] = useState<React.ComponentType<any> | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setIsLoading(true);
-      loadFontAwesomeIcons().then(({ FontAwesomeIcon }) => {
-        setIconComponent(() => FontAwesomeIcon);
-        setIsLoading(false);
-      });
-    }
-  }, [isLoading]);
-
-  if (!iconComponent || isLoading) {
-    return <div className={`${className} opacity-50`} />;
-  }
-
-  const iconMap: { [key: string]: any } = {
-    handshake: faHandshake,
-    spinner: faSpinner,
-    exclamationTriangle: faExclamationTriangle,
-    checkCircle: faCheckCircle,
-    users: faUsers,
-    sortUp: faSortUp,
-    sortDown: faSortDown,
-    refresh: faRefresh,
-    eye: faEye,
-    star: faStar,
-    trophy: faTrophy,
-    crown: faCrown,
-    timesCircle: faTimesCircle,
-    infoCircle: faInfoCircle
+  const iconMap: { [key: string]: string } = {
+    handshake: "🤝",
+    spinner: "⟳",
+    exclamationTriangle: "⚠️",
+    checkCircle: "✅",
+    users: "👥",
+    sortUp: "↑",
+    sortDown: "↓",
+    refresh: "🔄",
+    eye: "👁️",
+    star: "⭐",
+    trophy: "🏆",
+    crown: "👑",
+    timesCircle: "❌",
+    infoCircle: "ℹ️"
   };
 
-  const IconComponent = iconMap[name];
-  if (!IconComponent) return null;
-
-  return <FontAwesomeIcon icon={IconComponent} className={className} />;
+  const icon = iconMap[name] || "•";
+  return <span className={className}>{icon}</span>;
 };
 
 // Dynamic imports for FontAwesome icons to reduce bundle size

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, db } from "../../../../firebaseConfig";
+import { auth, db } from "../../../firebaseConfig";
 import { collection, doc, getDoc, onSnapshot, serverTimestamp, setDoc, query, where, getDocs } from "firebase/firestore";
 
 // Rect shape with optional assigned exhibitor

@@ -143,7 +143,7 @@ export default function FloorplanDesignerPage() {
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">Floorplan Designer</h1>
           <div className="flex gap-2">
-            <button onClick={() => router.push('/dashboard/organizer')} className="bg-[#6c757d] hover:bg-[#5a6268] text-white px-3 py-2 rounded">Back</button>
+            <button onClick={() => router.push('/dashboard')} className="bg-[#6c757d] hover:bg-[#5a6268] text-white px-3 py-2 rounded">Back</button>
             <button onClick={saveDesign} className="bg-[#0d6efd] hover:bg-[#fd7e14] text-white px-3 py-2 rounded">Save Design</button>
             <button onClick={publishSvg} className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded">Publish</button>
           </div>

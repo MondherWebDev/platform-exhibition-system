@@ -232,7 +232,7 @@ export default function OrganizerEventsPage() {
           <div className="flex items-center gap-2">
             <span className="text-[#6c757d] text-sm">Current Event:</span>
             <span className="px-2 py-1 rounded bg-white/10 text-white/90 text-sm">{currentEventId || "(none)"}</span>
-            <button onClick={()=>router.push('/dashboard/organizer')} className="bg-[#6c757d] hover:bg-[#5a6268] text-white px-3 py-2 rounded">Back</button>
+            <button onClick={()=>router.push('/dashboard')} className="bg-[#6c757d] hover:bg-[#5a6268] text-white px-3 py-2 rounded">Back</button>
           </div>
         </div>
         {info && <div className="mb-3 p-2 rounded bg-green-500/20 text-green-300 border border-green-500/30">{info}</div>}

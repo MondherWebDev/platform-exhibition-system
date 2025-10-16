@@ -50,7 +50,7 @@ export class RedisService {
   /**
    * Set value in cache with TTL
    */
-  async set(key: string, value: any, config: CacheConfig = {}): Promise<boolean> {
+  async set(key: string, value: unknown, config: CacheConfig = {}): Promise<boolean> {
     if (!this.isEnabled) return false;
 
     try {
@@ -69,7 +69,7 @@ export class RedisService {
   /**
    * Get value from cache
    */
-  async get<T = any>(key: string, namespace?: string): Promise<T | null> {
+  async get<T = unknown>(key: string, namespace?: string): Promise<T | null> {
     if (!this.isEnabled) return null;
 
     try {
@@ -105,7 +105,7 @@ export class RedisService {
   /**
    * Set multiple key-value pairs
    */
-  async mset(pairs: Array<{ key: string; value: any }>, config: CacheConfig = {}): Promise<boolean> {
+  async mset(pairs: Array<{ key: string; value: unknown }>, config: CacheConfig = {}): Promise<boolean> {
     if (!this.isEnabled) return false;
 
     try {
@@ -128,7 +128,7 @@ export class RedisService {
   /**
    * Get multiple values by keys
    */
-  async mget<T = any>(keys: string[], namespace?: string): Promise<(T | null)[]> {
+  async mget<T = unknown>(keys: string[], namespace?: string): Promise<(T | null)[]> {
     if (!this.isEnabled) return keys.map(() => null);
 
     try {
@@ -209,7 +209,7 @@ export const redisService = RedisService.getInstance();
  */
 export async function cacheMatchmakingResults(
   userId: string,
-  results: any[],
+  results: Record<string, unknown>[],
   ttl: number = 1800 // 30 minutes
 ): Promise<boolean> {
   return await redisService.set(
@@ -222,8 +222,8 @@ export async function cacheMatchmakingResults(
 /**
  * Get cached matchmaking results
  */
-export async function getCachedMatchmakingResults(userId: string): Promise<any[] | null> {
-  return await redisService.get<any[]>(`matchmaking:${userId}`, 'matchmaking');
+export async function getCachedMatchmakingResults(userId: string): Promise<Record<string, unknown>[] | null> {
+  return await redisService.get<Record<string, unknown>[]>(`matchmaking:${userId}`, 'matchmaking');
 }
 
 /**
@@ -231,7 +231,7 @@ export async function getCachedMatchmakingResults(userId: string): Promise<any[]
  */
 export async function cacheCheckinStatus(
   badgeId: string,
-  status: any,
+  status: Record<string, unknown>,
   ttl: number = 7200 // 2 hours
 ): Promise<boolean> {
   return await redisService.set(
@@ -244,8 +244,8 @@ export async function cacheCheckinStatus(
 /**
  * Get cached check-in status
  */
-export async function getCachedCheckinStatus(badgeId: string): Promise<any | null> {
-  return await redisService.get(`checkin:${badgeId}`, 'checkins');
+export async function getCachedCheckinStatus(badgeId: string): Promise<Record<string, unknown> | null> {
+  return await redisService.get<Record<string, unknown>>(`checkin:${badgeId}`, 'checkins');
 }
 
 /**
@@ -253,7 +253,7 @@ export async function getCachedCheckinStatus(badgeId: string): Promise<any | nul
  */
 export async function cacheBadgeQueue(
   eventId: string,
-  queueData: any,
+  queueData: Record<string, unknown>,
   ttl: number = 3600 // 1 hour
 ): Promise<boolean> {
   return await redisService.set(
@@ -266,8 +266,8 @@ export async function cacheBadgeQueue(
 /**
  * Get cached badge queue
  */
-export async function getCachedBadgeQueue(eventId: string): Promise<any | null> {
-  return await redisService.get(`badge-queue:${eventId}`, 'badges');
+export async function getCachedBadgeQueue(eventId: string): Promise<Record<string, unknown> | null> {
+  return await redisService.get<Record<string, unknown>>(`badge-queue:${eventId}`, 'badges');
 }
 
 /**
@@ -275,7 +275,7 @@ export async function getCachedBadgeQueue(eventId: string): Promise<any | null> 
  */
 export async function cacheRealtimeStats(
   eventId: string,
-  stats: any,
+  stats: Record<string, unknown>,
   ttl: number = 300 // 5 minutes
 ): Promise<boolean> {
   return await redisService.set(
@@ -288,8 +288,8 @@ export async function cacheRealtimeStats(
 /**
  * Get cached real-time statistics
  */
-export async function getCachedRealtimeStats(eventId: string): Promise<any | null> {
-  return await redisService.get(`stats:${eventId}`, 'analytics');
+export async function getCachedRealtimeStats(eventId: string): Promise<Record<string, unknown> | null> {
+  return await redisService.get<Record<string, unknown>>(`stats:${eventId}`, 'analytics');
 }
 
 /**
@@ -304,7 +304,7 @@ export async function incrementDailyCheckins(eventId: string, date: string): Pro
  */
 export async function cacheUserSession(
   sessionId: string,
-  sessionData: any,
+  sessionData: Record<string, unknown>,
   ttl: number = 86400 // 24 hours
 ): Promise<boolean> {
   return await redisService.set(
@@ -317,6 +317,6 @@ export async function cacheUserSession(
 /**
  * Get cached user session data
  */
-export async function getCachedUserSession(sessionId: string): Promise<any | null> {
-  return await redisService.get(`session:${sessionId}`, 'sessions');
+export async function getCachedUserSession(sessionId: string): Promise<Record<string, unknown> | null> {
+  return await redisService.get<Record<string, unknown>>(`session:${sessionId}`, 'sessions');
 }

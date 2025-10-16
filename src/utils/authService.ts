@@ -10,47 +10,16 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { createUserBadge } from './badgeService';
-
-export interface UserProfile {
-  uid: string;
-  email: string;
-  fullName: string;
-  position: string;
-  company: string;
-  category: string;
-  createdAt: string;
-  isAgent: boolean;
-  // Badge fields
-  badgeId?: string;
-  badgeCreated?: boolean;
-  badgeCreatedAt?: string;
-  badgePrinted?: boolean;
-  badgeStatus?: string;
-  badgeUpdatedAt?: string;
-  // Enhanced fields
-  contactEmail?: string;
-  contactPhone?: string;
-  website?: string;
-  address?: string;
-  industry?: string;
-  companySize?: string;
-  logoUrl?: string;
-  bio?: string;
-  linkedin?: string;
-  twitter?: string;
-  interests?: string;
-  budget?: string;
-  boothId?: string;
-  sponsorTier?: string;
-  generatedPassword?: string;
-  loginEmail?: string;
-  // Visitor-specific fields
-  jobFunction?: string;
-  challenges?: string;
-  sessionInterests?: string[];
-  networkingGoals?: string[];
-  subscribeNewsletter?: boolean;
-}
+import { UserProfile, UserRole, BadgeCategory, SponsorTier } from '../types/models';
+import {
+  createValidationError,
+  createServiceError,
+  sanitizeUserProfile,
+  isValidEmail,
+  isValidUserRole,
+  dateToTimestamp,
+  timestampToDate
+} from '../types/utils';
 
 export interface AuthState {
   user: User | null;
@@ -117,7 +86,7 @@ class AuthService {
               bio: '',
               linkedin: '',
               twitter: '',
-              interests: '',
+              interests: [],
               budget: '',
               boothId: '',
               sponsorTier: 'gold'
@@ -252,8 +221,8 @@ class AuthService {
         address: profileData.address || ''
       };
 
-      // Add category-specific fields
-      let categorySpecificData: any = {};
+      // Add category-specific fields with proper typing
+      let categorySpecificData: Record<string, string | number | boolean | string[]> = {};
 
       switch (profileData.category) {
         case 'Exhibitor':
@@ -283,7 +252,7 @@ class AuthService {
             industry: profileData.industry || '',
             companySize: profileData.companySize || '',
             budget: profileData.budget || '',
-            interests: profileData.interests || '',
+            interests: Array.isArray(profileData.interests) ? profileData.interests : [],
             logoUrl: profileData.logoUrl || '' // Using logoUrl for buyer photo
           };
           break;
@@ -413,7 +382,7 @@ class AuthService {
           bio: '',
           linkedin: '',
           twitter: '',
-          interests: '',
+          interests: [],
           budget: '',
           boothId: '',
           sponsorTier: 'gold'

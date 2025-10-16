@@ -1,7 +1,18 @@
 import { db } from '../firebaseConfig';
 import { collection, getDocs, query, where, orderBy, limit, doc, getDoc, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
-import { leadService, LeadData } from './leadService';
+import { leadService } from './leadService';
 import { cacheMatchmakingResults, getCachedMatchmakingResults } from './redisService';
+import {
+  UserProfile,
+  LeadDoc,
+  MatchDoc,
+  MatchStatus,
+  UserRole
+} from '../types/models';
+import {
+  createServiceError,
+  createApiResponse
+} from '../types/utils';
 
 export interface MatchRecommendation {
   id?: string;
@@ -15,24 +26,6 @@ export interface MatchRecommendation {
   used?: boolean;
   convertedToLead?: string;
   convertedAt?: any;
-}
-
-export interface UserProfile {
-  uid: string;
-  fullName: string;
-  company: string;
-  category: string;
-  industry?: string;
-  companySize?: string;
-  interests?: string;
-  budget?: string;
-  position?: string;
-  bio?: string;
-  linkedin?: string;
-  twitter?: string;
-  website?: string;
-  contactEmail?: string;
-  contactPhone?: string;
 }
 
 class MatchmakingService {
@@ -291,20 +284,23 @@ class MatchmakingService {
     let score = 0;
 
     // Bio similarity
-    if (exhibitor.bio && attendee.interests) {
-      const bioScore = this.calculateTextSimilarity(exhibitor.bio, attendee.interests);
+    if (exhibitor.bio && attendee.interests && attendee.interests.length > 0) {
+      const interestsText = Array.isArray(attendee.interests) ? attendee.interests.join(' ') : attendee.interests;
+      const bioScore = this.calculateTextSimilarity(exhibitor.bio, interestsText);
       score += bioScore * 0.4;
     }
 
     // Company description vs interests
-    if (exhibitor.company && attendee.interests) {
-      const companyScore = this.calculateTextSimilarity(exhibitor.company, attendee.interests);
+    if (exhibitor.company && attendee.interests && attendee.interests.length > 0) {
+      const interestsText = Array.isArray(attendee.interests) ? attendee.interests.join(' ') : attendee.interests;
+      const companyScore = this.calculateTextSimilarity(exhibitor.company, interestsText);
       score += companyScore * 0.3;
     }
 
     // Position/role vs interests
-    if (exhibitor.position && attendee.interests) {
-      const positionScore = this.calculateTextSimilarity(exhibitor.position, attendee.interests);
+    if (exhibitor.position && attendee.interests && attendee.interests.length > 0) {
+      const interestsText = Array.isArray(attendee.interests) ? attendee.interests.join(' ') : attendee.interests;
+      const positionScore = this.calculateTextSimilarity(exhibitor.position, interestsText);
       score += positionScore * 0.3;
     }
 
@@ -407,7 +403,7 @@ class MatchmakingService {
   private calculateCommunicationStyleMatch(exhibitor: UserProfile, attendee: UserProfile): number {
     // Analyze bio and description for communication style indicators
     const exhibitorText = `${exhibitor.bio || ''} ${exhibitor.position || ''}`.toLowerCase();
-    const attendeeInterests = (attendee.interests || '').toLowerCase();
+    const attendeeInterests = Array.isArray(attendee.interests) ? attendee.interests.join(' ') : (attendee.interests || '');
 
     // Look for communication style keywords
     const formalKeywords = ['enterprise', 'corporate', 'executive', 'strategic', 'management'];
@@ -439,7 +435,7 @@ class MatchmakingService {
     const b2cIndicators = ['consumer', 'retail', 'individual', 'personal', 'lifestyle'];
 
     const exhibitorText = `${exhibitor.company} ${exhibitor.industry || ''}`.toLowerCase();
-    const attendeeInterests = (attendee.interests || '').toLowerCase();
+    const attendeeInterests = Array.isArray(attendee.interests) ? attendee.interests.join(' ') : (attendee.interests || '');
 
     let exhibitorB2B = 0;
     let attendeeB2B = 0;
@@ -736,7 +732,7 @@ class MatchmakingService {
     limitCount: number = 20
   ): Promise<MatchRecommendation[]> {
     try {
-      let constraints: any[] = [];
+      const constraints: any[] = [];
 
       if (userUid && userType) {
         if (userType === 'exhibitor') {
@@ -783,7 +779,8 @@ class MatchmakingService {
         const cachedResults = await getCachedMatchmakingResults(`${userType}:${userUid}`);
         if (cachedResults && cachedResults.length > 0) {
           console.log(`🔄 Retrieved ${cachedResults.length} cached matchmaking results`);
-          return cachedResults;
+          // Type assertion needed due to Redis generic return type
+          return cachedResults as unknown as Array<MatchRecommendation & { matchedUser: UserProfile }>;
         }
       }
 
@@ -793,7 +790,7 @@ class MatchmakingService {
 
       // Cache the results for future use (30 minutes TTL)
       if (freshResults.length > 0) {
-        await cacheMatchmakingResults(`${userType}:${userUid}`, freshResults, 1800);
+        await cacheMatchmakingResults(`${userType}:${userUid}`, freshResults as Record<string, unknown>[], 1800);
         console.log(`💾 Cached ${freshResults.length} matchmaking results`);
       }
 

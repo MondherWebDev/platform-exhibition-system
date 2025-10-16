@@ -6,77 +6,65 @@ import { onAuthStateChanged } from "firebase/auth";
 import { processQRCodeScan, QRScanResult } from "../../../../utils/badgeService";
 import QRCodeScanner from "../../../../components/QRCodeScanner";
 import ClientOnly from '../../../../components/ClientOnly';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faQrcode,
-  faCheckCircle,
-  faTimesCircle,
-  faSpinner,
-  faUsers,
-  faHandshake,
-  faTrophy,
-  faCrown,
-  faStar,
-  faMedal,
-  faAward,
-  faLightbulb,
-  faBrain,
-  faFilter,
-  faSearch,
-  faSort,
-  faSortUp,
-  faSortDown,
-  faArrowLeft,
-  faArrowRight,
-  faPlay,
-  faStop,
-  faPause,
-  faForward,
-  faBackward,
-  faCog,
-  faBars,
-  faSignOutAlt as faSignOutAltIcon,
-  faBell,
-  faBell as faBellIcon,
-  faInfoCircle as faInfoCircleIcon,
-  faUser as faUserIcon,
-  faBuilding as faBuildingIcon,
-  faEnvelope as faEnvelopeIcon,
-  faPhone as faPhoneIcon,
-  faGlobe as faGlobeIcon,
-  faMapMarkerAlt as faMapMarkerAltIcon,
-  faIndustry as faIndustryIcon,
-  faUsers as faUsersIcon,
-  faCheckCircle as faCheckCircleIcon,
-  faTimesCircle as faTimesCircleIcon,
-  faSpinner as faSpinnerIcon,
-  faCrown as faCrownIcon,
-  faStar as faStarIcon,
-  faLightbulb as faLightbulbIcon,
-  faHandshake as faHandshakeIcon,
-  faCalendar as faCalendarIcon,
-  faClock as faClockIcon,
-  faEye as faEyeIcon,
-  faEyeSlash as faEyeSlashIcon,
-  faLock as faLockIcon,
-  faUnlock as faUnlockIcon,
-  faExclamationTriangle as faExclamationTriangleIcon,
-  faCheck as faCheckIcon,
-  faArrowRight as faArrowRightIcon,
-  faArrowLeft as faArrowLeftIcon,
-  faDownload,
-  faRefresh,
-  faEye,
-  faEyeSlash,
-  faInfoCircle,
-  faExclamationTriangle,
-  faClock,
-  faCalendar,
-  faUserCheck,
-  faUserTimes,
-  faSignInAlt,
-  faSignOutAlt
-} from '@fortawesome/free-solid-svg-icons';
+
+// Icon component with dynamic loading to reduce bundle size
+const Icon = ({ name, className = "w-4 h-4" }: { name: string; className?: string }) => {
+  const [iconComponent, setIconComponent] = useState<React.ComponentType<any> | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setIsLoading(true);
+      loadFontAwesomeIcons().then(({ FontAwesomeIcon }) => {
+        setIconComponent(() => FontAwesomeIcon);
+        setIsLoading(false);
+      });
+    }
+  }, [isLoading]);
+
+  if (!iconComponent || isLoading) {
+    return <div className={`${className} opacity-50`} />;
+  }
+
+  const iconMap: { [key: string]: any } = {
+    handshake: faHandshake,
+    spinner: faSpinner,
+    exclamationTriangle: faExclamationTriangle,
+    checkCircle: faCheckCircle,
+    users: faUsers,
+    sortUp: faSortUp,
+    sortDown: faSortDown,
+    refresh: faRefresh,
+    eye: faEye,
+    star: faStar,
+    trophy: faTrophy,
+    crown: faCrown,
+    timesCircle: faTimesCircle,
+    infoCircle: faInfoCircle
+  };
+
+  const IconComponent = iconMap[name];
+  if (!IconComponent) return null;
+
+  return <FontAwesomeIcon icon={IconComponent} className={className} />;
+};
+
+// Dynamic imports for FontAwesome icons to reduce bundle size
+const loadFontAwesomeIcons = async () => {
+  const { FontAwesomeIcon } = await import('@fortawesome/react-fontawesome');
+  const {
+    faStar, faHandshake, faTrophy, faCrown, faTimesCircle, faInfoCircle,
+    faSpinner, faExclamationTriangle, faCheckCircle, faUsers, faSortUp,
+    faSortDown, faRefresh, faEye
+  } = await import('@fortawesome/free-solid-svg-icons');
+
+  return {
+    FontAwesomeIcon,
+    faStar, faHandshake, faTrophy, faCrown, faTimesCircle, faInfoCircle,
+    faSpinner, faExclamationTriangle, faCheckCircle, faUsers, faSortUp,
+    faSortDown, faRefresh, faEye
+  };
+};
 
 interface LeadRecord {
   id: string;
@@ -107,13 +95,13 @@ interface ExhibitorStats {
 
 export default function ExhibitorLeadCapture() {
   const [currentView, setCurrentView] = useState<'scanner' | 'leads' | 'stats'>('scanner');
-  const [scanResult, setScanResult] = useState<QRScanResult | null>(null);
+  const [, setScanResult] = useState<QRScanResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isClient, setIsClient] = useState(false);
-  const [currentEventId, setCurrentEventId] = useState<string>('default');
-  const [exhibitorInfo, setExhibitorInfo] = useState<any>(null);
+  const [, setCurrentEventId] = useState<string>('default');
+  const [exhibitorInfo, setExhibitorInfo] = useState<{fullName?: string; company?: string} | null>(null);
 
   // Leads state
   const [leads, setLeads] = useState<LeadRecord[]>([]);
@@ -476,17 +464,17 @@ export default function ExhibitorLeadCapture() {
   const getStatusIcon = (status: LeadRecord['status']) => {
     switch (status) {
       case 'new':
-        return faStar;
+        return 'star';
       case 'contacted':
-        return faHandshake;
+        return 'handshake';
       case 'qualified':
-        return faTrophy;
+        return 'trophy';
       case 'converted':
-        return faCrown;
+        return 'crown';
       case 'rejected':
-        return faTimesCircle;
+        return 'timesCircle';
       default:
-        return faInfoCircle;
+        return 'infoCircle';
     }
   };
 
@@ -500,7 +488,7 @@ export default function ExhibitorLeadCapture() {
       <header className="bg-white/10 backdrop-blur-md border-b border-white/20 p-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <FontAwesomeIcon icon={faHandshake} className="text-blue-400 text-2xl" />
+            <Icon name="handshake" className="text-blue-400 text-2xl" />
             <div>
               <h1 className="text-xl font-bold text-white">Lead Capture</h1>
               <p className="text-blue-200 text-sm">Scan visitor badges to capture leads</p>
@@ -581,21 +569,21 @@ export default function ExhibitorLeadCapture() {
 
               {loading && (
                 <div className="mt-4 text-center">
-                  <FontAwesomeIcon icon={faSpinner} className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-2" />
+                  <Icon name="spinner" className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-2" />
                   <p className="text-gray-300">Capturing lead...</p>
                 </div>
               )}
 
               {error && (
                 <div className="mt-4 bg-red-500/10 border border-red-500/20 text-red-300 p-4 rounded-lg flex items-center gap-2">
-                  <FontAwesomeIcon icon={faExclamationTriangle} className="w-5 h-5" />
+                  <Icon name="exclamationTriangle" className="w-5 h-5" />
                   <span>{error}</span>
                 </div>
               )}
 
               {success && (
                 <div className="mt-4 bg-green-500/10 border border-green-500/20 text-green-300 p-4 rounded-lg flex items-center gap-2">
-                  <FontAwesomeIcon icon={faCheckCircle} className="w-5 h-5" />
+                  <Icon name="checkCircle" className="w-5 h-5" />
                   <span>{success}</span>
                 </div>
               )}
@@ -631,8 +619,8 @@ export default function ExhibitorLeadCapture() {
                   {leads.slice(0, 5).map((lead) => (
                     <div key={lead.id} className="bg-white/5 rounded-lg p-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <FontAwesomeIcon
-                          icon={getStatusIcon(lead.status)}
+                        <Icon
+                          name={getStatusIcon(lead.status)}
                           className={`w-4 h-4 ${lead.status === 'new' ? 'text-blue-400' : lead.status === 'qualified' ? 'text-purple-400' : 'text-gray-400'}`}
                         />
                         <div>
@@ -695,7 +683,7 @@ export default function ExhibitorLeadCapture() {
                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
                     className="px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
                   >
-                    <FontAwesomeIcon icon={sortOrder === 'asc' ? faSortUp : faSortDown} />
+                    <Icon name={sortOrder === 'asc' ? 'sortUp' : 'sortDown'} />
                   </button>
                 </div>
               </div>
@@ -709,7 +697,7 @@ export default function ExhibitorLeadCapture() {
                   onClick={loadLeads}
                   className="text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                  <FontAwesomeIcon icon={faRefresh} className="w-4 h-4 mr-2" />
+                  <Icon name="refresh" className="w-4 h-4 mr-2" />
                   Refresh
                 </button>
               </div>
@@ -757,7 +745,7 @@ export default function ExhibitorLeadCapture() {
                             onClick={() => openLeadModal(lead)}
                             className="text-blue-400 hover:text-blue-300 transition-colors"
                           >
-                            <FontAwesomeIcon icon={faEye} className="w-4 h-4" />
+                            <Icon name="eye" className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
@@ -768,7 +756,7 @@ export default function ExhibitorLeadCapture() {
 
               {filteredLeads.length === 0 && (
                 <div className="text-center py-8 text-gray-400">
-                  <FontAwesomeIcon icon={faUsers} className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <Icon name="users" className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>No leads found matching your criteria</p>
                 </div>
               )}
@@ -782,22 +770,22 @@ export default function ExhibitorLeadCapture() {
             {/* Overview Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
-                <FontAwesomeIcon icon={faUsers} className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                <Icon name="users" className="w-8 h-8 text-blue-400 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-blue-400">{exhibitorStats.totalLeads}</div>
                 <div className="text-sm text-gray-300">Total Leads</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
-                <FontAwesomeIcon icon={faStar} className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                <Icon name="star" className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-yellow-400">{exhibitorStats.newLeads}</div>
                 <div className="text-sm text-gray-300">New Leads</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
-                <FontAwesomeIcon icon={faTrophy} className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                <Icon name="trophy" className="w-8 h-8 text-purple-400 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-purple-400">{exhibitorStats.qualifiedLeads}</div>
                 <div className="text-sm text-gray-300">Qualified</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
-                <FontAwesomeIcon icon={faCrown} className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                <Icon name="crown" className="w-8 h-8 text-green-400 mx-auto mb-2" />
                 <div className="text-2xl font-bold text-green-400">{exhibitorStats.convertedLeads}</div>
                 <div className="text-sm text-gray-300">Converted</div>
               </div>
@@ -873,7 +861,7 @@ export default function ExhibitorLeadCapture() {
                   onClick={() => setShowLeadModal(false)}
                   className="text-white/70 hover:text-white"
                 >
-                  <FontAwesomeIcon icon={faTimesCircle} className="w-6 h-6" />
+                  <Icon name="timesCircle" className="w-6 h-6" />
                 </button>
               </div>
             </div>

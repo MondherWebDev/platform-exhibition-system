@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const limitCount = parseInt(searchParams.get('limit') || '50');
     const search = searchParams.get('search');
 
-    let constraints: any[] = [];
+    const constraints: any[] = [];
 
     // Add event filter if specified
     if (eventId && eventId !== 'all') {

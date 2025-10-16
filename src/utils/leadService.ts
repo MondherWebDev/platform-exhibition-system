@@ -1519,7 +1519,7 @@ class LeadService {
     limit?: number;
   }): Promise<LeadData[]> {
     try {
-      let constraints: any[] = [];
+      const constraints: any[] = [];
 
       if (filters?.status) {
         constraints.push(where('status', '==', filters.status));
@@ -2282,7 +2282,7 @@ class LeadService {
     const attendeeInterests = attendeeData.interests || '';
     const exhibitorIndustry = exhibitorData.industry || '';
 
-    let type = 'content';
+    const type = 'content';
     let title = 'Industry Insights';
     let description = 'Share relevant industry insights and resources';
 

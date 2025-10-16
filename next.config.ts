@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
           {
             key: 'Access-Control-Allow-Origin',
             value: process.env.NODE_ENV === 'production'
-              ? 'https://your-domain.com'
+              ? process.env.NEXT_PUBLIC_APP_URL || 'https://platform-exhibition-system.vercel.app'
               : 'http://localhost:3000',
           },
           {

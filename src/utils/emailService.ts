@@ -3,19 +3,30 @@
  * Handles sending welcome emails with credentials to newly created accounts
  */
 
-interface EmailData {
+export interface EmailData {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  from?: string;
+  cc?: string[];
+  bcc?: string[];
 }
 
-interface UserCredentials {
+export interface UserCredentials {
   email: string;
   password: string;
   category: string;
   name: string;
   userId: string;
+  company?: string;
+  position?: string;
+}
+
+export type AccountCategory = 'Exhibitor' | 'Sponsor' | 'Speaker' | 'Hosted Buyer' | 'Visitor' | 'Organizer' | 'Agent' | 'Media' | 'VIP';
+
+export interface CategoryColors {
+  [key: string]: string;
 }
 
 /**

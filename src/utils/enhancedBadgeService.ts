@@ -23,12 +23,13 @@ import {
   getFirestore
 } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-import { BadgeData, BadgeTemplate, BadgeCategory, BadgeStatus, BadgeFilters, BulkOperation, BadgeAnalytics } from '../types/badge';
+import { BadgeDoc, BadgeTemplate, BadgeCategory, BadgeStatus } from '../types/models';
+import { BadgeFilters, BulkOperation, BadgeAnalytics } from '../types/badge';
 
 export interface BadgeOperationResult {
   success: boolean;
   error?: string;
-  data?: any;
+  data?: Record<string, string | number | boolean | BadgeDoc | BadgeDoc[]>;
 }
 
 export interface BadgePDFData {
@@ -58,7 +59,7 @@ export class EnhancedBadgeService {
     eventId: string = 'default',
     templateId: string = 'visitor_ebadge',
     createdBy: string
-  ): Promise<BadgeData> {
+  ): Promise<BadgeDoc> {
     try {
       console.log('🔍 Getting user profile for badge generation:', userId);
       const userProfile = await this.getUserProfile(userId);
@@ -76,23 +77,23 @@ export class EnhancedBadgeService {
 
       const badgeId = `visitor_ebadge_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      const badgeData: BadgeData = {
+      const badgeData: BadgeDoc = {
         id: badgeId,
-        userId,
+        uid: userId,
         eventId,
         name: userProfile.fullName || userProfile.email,
         role: userProfile.position || 'Visitor',
         company: userProfile.company,
-        category: 'Visitor', // Force category to Visitor for e-badges
+        category: 'Visitor' as BadgeCategory, // Force category to Visitor for e-badges
         email: userProfile.email,
         phone: userProfile.phone,
         photoUrl: userProfile.photoUrl,
         qrCode,
         status: 'active', // E-badges are immediately active
         template: templateId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy,
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any,
+        createdBy: userId,
         metadata: {
           version: '2.0',
           source: 'enhanced_badge_service',
@@ -350,7 +351,7 @@ export class EnhancedBadgeService {
     eventId: string = 'default',
     templateId: string = 'default',
     createdBy: string
-  ): Promise<BadgeData> {
+  ): Promise<BadgeDoc> {
     try {
       const userProfile = await this.getUserProfile(userId);
       if (!userProfile) {
@@ -361,7 +362,7 @@ export class EnhancedBadgeService {
 
       const badgeId = `badge_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      const badgeData: BadgeData = {
+      const badgeData: BadgeDoc = {
         id: badgeId,
         userId,
         eventId,
@@ -375,8 +376,8 @@ export class EnhancedBadgeService {
         qrCode,
         status: 'pending',
         template: templateId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: serverTimestamp() as any,
+        updatedAt: serverTimestamp() as any,
         createdBy,
         metadata: {
           version: '2.0',
@@ -419,7 +420,7 @@ export class EnhancedBadgeService {
     templateId: string = 'default',
     existingQRCode: string,
     createdBy: string
-  ): Promise<BadgeData> {
+  ): Promise<BadgeDoc> {
     try {
       const userProfile = await this.getUserProfile(userId);
       if (!userProfile) {
@@ -428,7 +429,7 @@ export class EnhancedBadgeService {
 
       const badgeId = `badge_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      const badgeData: BadgeData = {
+      const badgeData: BadgeDoc = {
         id: badgeId,
         userId,
         eventId,
@@ -611,7 +612,7 @@ export class EnhancedBadgeService {
 
       if (badgeDoc.exists()) {
         const badgeData = badgeDoc.data();
-        const userId = badgeData.userId;
+        const userId = (badgeData as any).uid;
         console.log('✅ Found badge document:', badgeId, 'for user:', userId);
 
         // Use batch write for atomic operation
@@ -906,7 +907,7 @@ export class EnhancedBadgeService {
    */
   async searchBadges(filters: BadgeFilters): Promise<BadgeData[]> {
     try {
-      let queryConstraints: any[] = [];
+      const queryConstraints: any[] = [];
 
       if (filters.eventId) {
         queryConstraints.push(where('eventId', '==', filters.eventId));
@@ -1053,7 +1054,7 @@ export class EnhancedBadgeService {
       // No background fill - badge content will sit directly on A5 design
 
       // Main content - Start from constrained position
-      let yPosition = constrainedY; // Start from constrained position
+      const yPosition = constrainedY; // Start from constrained position
 
       // Use dynamic font size and styling from positionOptions
       const fontSize = positionOptions?.fontSize || 14;

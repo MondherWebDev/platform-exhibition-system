@@ -2,7 +2,7 @@
 // If you delete this file, remove `setupFilesAfterEnv` from `jest.config.js`
 
 // Learn more: https://github.com/testing-library/jest-dom
-require('@testing-library/jest-dom');
+import '@testing-library/jest-dom';
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -57,14 +57,17 @@ jest.mock('./src/firebaseConfig', () => ({
 jest.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const React = require('react');
       return React.createElement('div', props, children);
     },
     button: ({ children, ...props }) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const React = require('react');
       return React.createElement('button', props, children);
     },
     form: ({ children, ...props }) => {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const React = require('react');
       return React.createElement('form', props, children);
     },

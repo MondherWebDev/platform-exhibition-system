@@ -3,28 +3,10 @@
  * Handles automatic badge generation and storage for newly created accounts
  */
 
-import { doc, setDoc, collection, getDocs, query, where, getDoc, orderBy, limit, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, query, where, getDoc, orderBy, limit, addDoc, updateDoc, serverTimestamp, QueryConstraint } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
-
-interface BadgeData {
-  id: string;
-  userId: string;
-  name: string;
-  role: string;
-  company: string;
-  category: string;
-  qrCode: string;
-  badgeUrl: string;
-  createdAt: Date;
-  eventId: string;
-  status?: 'printed' | 'pending' | 'reprint';
-  updatedAt?: Date;
-  printedAt?: Date;
-  updatedBy?: string;
-  email?: string;
-  phone?: string;
-  template?: string;
-}
+import { BadgeDoc, BadgeTemplate, BadgeCategory, BadgeStatus, UserRole } from '../types/models';
+import { timestampToDate, dateToTimestamp } from '../types/utils';
 
 /**
  * Generate QR code image data URL
@@ -58,7 +40,7 @@ const generateQRCodeImage = async (qrCodeData: string): Promise<string> => {
 /**
  * Generate QR code data for a user - SIMPLIFIED FOR CHECK-IN/OUT
  */
-export const generateQRCodeData = (userId: string, category: string, eventId: string = 'default'): string => {
+export const generateQRCodeData = (userId: string, category: BadgeCategory, eventId: string = 'default'): string => {
   try {
     console.log('🎫 Generating QR code data for:', { userId, category, eventId });
 
@@ -88,41 +70,46 @@ export const createUserBadge = async (
     category: string;
   },
   eventId: string = 'default'
-): Promise<BadgeData | null> => {
+): Promise<BadgeDoc | null> => {
   try {
     console.log('🎫 Creating badge for user:', userId);
 
     // Generate QR code data
-    const qrCode = generateQRCodeData(userId, userData.category);
+    const qrCode = generateQRCodeData(userId, userData.category as BadgeCategory);
 
     // Generate badge image URL
     const badgeUrl = generateBadgeImageData({
-      userId,
-      name: userData.name,
-      role: userData.role,
-      company: userData.company,
-      category: userData.category
-    } as any);
-
-    // Create badge data
-    const badgeData: BadgeData = {
       id: `badge_${userId}_${Date.now()}`,
       userId,
       name: userData.name,
       role: userData.role,
       company: userData.company,
-      category: userData.category,
+      category: userData.category as BadgeCategory,
+      qrCode: '',
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    // Create badge data
+    const badgeData: BadgeDoc = {
+      id: `badge_${userId}_${Date.now()}`,
+      uid: userId,
+      eventId,
+      name: userData.name,
+      role: userData.role,
+      company: userData.company,
+      category: userData.category as BadgeCategory,
       qrCode,
       badgeUrl,
-      createdAt: new Date(),
-      eventId
+      status: 'pending',
+      createdAt: serverTimestamp() as any,
+      updatedAt: serverTimestamp() as any,
+      createdBy: userId
     };
 
     // Store badge in Firestore
-    await setDoc(doc(db, 'Badges', badgeData.id), {
-      ...badgeData,
-      createdAt: new Date()
-    });
+    await setDoc(doc(db, 'Badges', badgeData.id), badgeData);
 
     // Also store badge reference in user document
     await setDoc(doc(db, 'Users', userId), {
@@ -182,10 +169,10 @@ export const getEventBadges = async (eventId: string = 'default'): Promise<Badge
     );
 
     const badgesSnapshot = await getDocs(badgesQuery);
-    const badges: BadgeData[] = [];
+    const badges: BadgeDoc[] = [];
 
     badgesSnapshot.forEach((doc) => {
-      badges.push({ id: doc.id, ...doc.data() } as BadgeData);
+    badges.push({ id: doc.id, ...doc.data() } as BadgeDoc);
     });
 
     return badges;
@@ -299,7 +286,7 @@ export const duplicateBadge = async (
   badgeId: string,
   newUserId: string,
   updates?: Partial<BadgeData>
-): Promise<BadgeData | null> => {
+): Promise<BadgeDoc | null> => {
   try {
     // Get original badge data
     const badgeDoc = await getDoc(doc(db, 'Badges', badgeId));
@@ -312,7 +299,7 @@ export const duplicateBadge = async (
     const originalBadge = badgeDoc.data() as BadgeData;
 
     // Create new badge data with updates
-    const duplicatedBadge: BadgeData = {
+    const duplicatedBadge: BadgeDoc = {
       ...originalBadge,
       id: `badge_${newUserId}_${Date.now()}`,
       userId: newUserId,
@@ -425,10 +412,10 @@ export const exportBadges = async (
     );
 
     const badgesSnapshot = await getDocs(badgesQuery);
-    const badges: BadgeData[] = [];
+    const badges: BadgeDoc[] = [];
 
     badgesSnapshot.forEach((doc) => {
-      badges.push({ id: doc.id, ...doc.data() } as BadgeData);
+    badges.push({ id: doc.id, ...doc.data() } as BadgeDoc);
     });
 
     switch (format) {
@@ -626,52 +613,92 @@ export const generateBadgeImageData = (badgeData: BadgeData): string => {
 };
 
 /**
- * Badge Templates
- */
-export interface BadgeTemplate {
-  id: string;
-  name: string;
-  backgroundColor: string;
-  textColor: string;
-  accentColor: string;
-  layout: 'standard' | 'modern' | 'classic' | 'minimal';
-}
-
-/**
  * Predefined badge templates
  */
 export const badgeTemplates: BadgeTemplate[] = [
   {
     id: 'modern',
     name: 'Modern',
+    description: 'Modern gradient design with clean typography',
+    layout: 'modern',
     backgroundColor: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     textColor: '#ffffff',
     accentColor: '#4ade80',
-    layout: 'modern'
+    fontFamily: 'Arial, sans-serif',
+    fontSize: {
+      name: 18,
+      role: 14,
+      company: 12
+    },
+    includeQR: true,
+    includePhoto: false,
+    preview: '/badge-templates/modern.png',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
   {
     id: 'classic',
     name: 'Classic',
+    description: 'Traditional dark theme with blue accents',
+    layout: 'classic',
     backgroundColor: '#1a1a1a',
     textColor: '#ffffff',
     accentColor: '#0d6efd',
-    layout: 'classic'
+    fontFamily: 'Arial, sans-serif',
+    fontSize: {
+      name: 18,
+      role: 14,
+      company: 12
+    },
+    includeQR: true,
+    includePhoto: false,
+    preview: '/badge-templates/classic.png',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
   {
     id: 'minimal',
     name: 'Minimal',
+    description: 'Clean white background with minimal styling',
+    layout: 'minimal',
     backgroundColor: '#ffffff',
     textColor: '#000000',
     accentColor: '#6b7280',
-    layout: 'minimal'
+    fontFamily: 'Arial, sans-serif',
+    fontSize: {
+      name: 16,
+      role: 12,
+      company: 10
+    },
+    includeQR: true,
+    includePhoto: false,
+    preview: '/badge-templates/minimal.png',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
   },
   {
     id: 'corporate',
     name: 'Corporate',
+    description: 'Professional blue theme for corporate events',
+    layout: 'corporate',
     backgroundColor: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
     textColor: '#ffffff',
     accentColor: '#fbbf24',
-    layout: 'standard'
+    fontFamily: 'Arial, sans-serif',
+    fontSize: {
+      name: 18,
+      role: 14,
+      company: 12
+    },
+    includeQR: true,
+    includePhoto: false,
+    preview: '/badge-templates/corporate.png',
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
   }
 ];
 
@@ -1318,7 +1345,7 @@ export const searchBadges = async (
   }
 ): Promise<BadgeData[]> => {
   try {
-    let queryConstraints: any[] = [];
+    const queryConstraints: any[] = [];
 
     if (filters.eventId) {
       queryConstraints.push(where('eventId', '==', filters.eventId));

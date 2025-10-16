@@ -314,7 +314,7 @@ export default function BadgePrintingStation() {
       // Generate QR code data using the attendee's information
       const qrData = generateQRCodeData(
         selectedAttendeeForPreview.id,
-        selectedAttendeeForPreview.category,
+        selectedAttendeeForPreview.category as any,
         currentEventId
       );
 

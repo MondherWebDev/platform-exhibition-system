@@ -1,0 +1,133 @@
+/*
+  Firestore Security Rules (set these in Firebase Console > Firestore > Rules):
+
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      // AppSettings collection - public read for global settings
+      match /AppSettings/{document} {
+        allow read: if true;
+        allow write: if request.auth != null && get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.category == 'Organizer';
+      }
+
+      // Users collection - authenticated users can read/write their own data
+      match /Users/{userId} {
+        allow read: if request.auth != null && (
+          request.auth.uid == userId ||
+          get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.category == 'Agent' ||
+          get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.category == 'Organizer'
+        );
+        allow update: if request.auth != null && (
+          request.auth.uid == userId ||
+          get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.isAgent == true ||
+          get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.category == 'Organizer'
+        );
+        allow create: if request.auth != null;
+      }
+
+      // Events collection - public read, organizers can write
+      match /Events/{eventId} {
+        allow read: if true;
+        allow write: if request.auth != null && get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.category == 'Organizer';
+      }
+
+      // Event subcollections - public read for event data
+      match /Events/{eventId}/{collection}/{document} {
+        allow read: if true;
+        allow write: if request.auth != null && get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.category == 'Organizer';
+      }
+
+      // CheckIns collection - public read for analytics, authenticated write
+      match /CheckIns/{checkInId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+
+      // Leads collection - authenticated users only
+      match /Leads/{leadId} {
+        allow read, write: if request.auth != null;
+      }
+
+      // Badges collection - authenticated users can read/write badges they own
+      match /Badges/{badgeId} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null;
+        allow delete: if request.auth != null;
+      }
+
+      // Allow public read for essential data, authenticated write for everything else
+      match /{document=**} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+  }
+*/
+
+import { initializeApp } from 'firebase/app';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { initializeFirestore, setLogLevel } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import { getAnalytics } from 'firebase/analytics';
+import { getMessaging } from 'firebase/messaging';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCMjNjOG-rdz7WUJOgPdi9ODWkpHqowbkI",
+  authDomain: "smart-event-management-d71a4.firebaseapp.com",
+  projectId: "smart-event-management-d71a4",
+  storageBucket: "smart-event-management-d71a4.appspot.com",
+  messagingSenderId: "411158147657",
+  appId: "1:411158147657:web:8c302fdfc7be9e682e0598",
+  measurementId: "G-VS4QJY53YE"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+
+// Configure auth persistence to use localStorage
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error('Error setting auth persistence:', error);
+});
+
+// Initialize auth persistence
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    console.log('🔥 Firebase Auth: User authenticated:', user.email);
+    // Ensure user data is available in localStorage for middleware
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('firebase_auth_user', JSON.stringify({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        timestamp: Date.now()
+      }));
+    }
+  } else {
+    console.log('🔥 Firebase Auth: User not authenticated');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('firebase_auth_user');
+    }
+  }
+});
+// Firestore with long polling to better handle restrictive networks/proxies
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
+// Reduce Firestore console noise in dev when offline
+setLogLevel('error');
+export const storage = getStorage(app);
+
+// Analytics - only in browser with full support
+export const analytics = 
+  typeof window !== 'undefined' && 
+  'analytics' in firebaseConfig ? 
+  getAnalytics(app) : 
+  undefined;
+
+// Messaging - only in browser with service worker support
+export const messaging = 
+  typeof window !== 'undefined' && 
+  'serviceWorker' in navigator && 
+  navigator.serviceWorker && 
+  typeof navigator.serviceWorker.addEventListener === 'function' ? 
+  getMessaging(app) : 
+  undefined;

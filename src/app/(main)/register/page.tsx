@@ -20,7 +20,10 @@ export default function Registration() {
     jobTitle: "",
     nationality: "",
     country: "",
-    hearAbout: ""
+    hearAbout: "",
+    companyDescription: "",
+    logoFile: null as File | null,
+    logoPreview: ""
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +31,7 @@ export default function Registration() {
   const [submitError, setSubmitError] = useState("");
   const router = useRouter();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -204,7 +207,10 @@ export default function Registration() {
         jobTitle: "",
         nationality: "",
         country: "",
-        hearAbout: ""
+        hearAbout: "",
+        companyDescription: "",
+        logoFile: null,
+        logoPreview: ""
       });
 
     } catch (error) {
@@ -1004,6 +1010,74 @@ export default function Registration() {
                     <option value="newspaper_ads">Newspaper Ads</option>
                   </select>
                 </div>
+              )}
+
+              {/* Exhibitor-specific fields */}
+              {formData.category === 'Exhibitor' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Company Description
+                    </label>
+                    <textarea
+                      name="companyDescription"
+                      value={formData.companyDescription}
+                      onChange={handleInputChange}
+                      rows={4}
+                      className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      placeholder="Brief description of your company and what you do..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Company Logo
+                    </label>
+                    <div className="space-y-3">
+                      <input
+                        type="file"
+                        name="logoFile"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0] || null;
+                          setFormData(prev => ({
+                            ...prev,
+                            logoFile: file
+                          }));
+
+                          // Create preview URL
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                              setFormData(prev => ({
+                                ...prev,
+                                logoPreview: e.target?.result as string
+                              }));
+                            };
+                            reader.readAsDataURL(file);
+                          } else {
+                            setFormData(prev => ({
+                              ...prev,
+                              logoPreview: ""
+                            }));
+                          }
+                        }}
+                        className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                      />
+
+                      {formData.logoPreview && (
+                        <div className="mt-3">
+                          <p className="text-sm text-gray-600 mb-2">Logo Preview:</p>
+                          <img
+                            src={formData.logoPreview}
+                            alt="Logo preview"
+                            className="max-w-32 max-h-32 object-contain border border-gray-300 rounded"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
 
 

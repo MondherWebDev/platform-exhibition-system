@@ -105,13 +105,8 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
           return;
         }
 
-        // Don't auto-redirect if we're on the signin page - let users manually sign in
-        // This prevents infinite redirect loops and allows manual sign in flow
-        const isOnSignInPage = window.location.pathname === '/signin';
-        if (isOnSignInPage) {
-          console.log('🔐 AuthForm: User authenticated but staying on signin page for manual login');
-          return;
-        }
+        // Allow redirect from signin page after successful authentication
+        // Users should be redirected to their appropriate dashboard
 
         // Handle successful authentication and redirect based on user role
         const targetPath = authService.getRedirectPath(authState.profile.category, redirectPath || undefined);

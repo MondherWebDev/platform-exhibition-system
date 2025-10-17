@@ -16,8 +16,8 @@ export default function SignIn() {
     const unsubscribe = auth.onAuthStateChanged((u) => {
       if (isMounted) {
         setUser(u);
-        // Don't auto-redirect from signin page - let users manually sign in
-        // But allow programmatic redirects for administrators
+        // Allow auto-redirect after successful authentication
+        // The AuthForm component will handle the redirection logic
       }
     });
 
@@ -27,7 +27,7 @@ export default function SignIn() {
     };
   }, []); // Remove dependencies to prevent infinite re-renders
 
-  // Show form regardless of auth state - let users manually sign in
+  // Show form for unauthenticated users, redirect authenticated users
 
   return (
     <div className="min-h-screen w-full bg-gray-50">

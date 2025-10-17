@@ -21,7 +21,7 @@ export function middleware(request: NextRequest) {
 
     // In development, be more permissive
     const isDevelopment = process.env.NODE_ENV === 'development';
-    const hasAuthCookie = authCookies.length > 1; // More than just __next_hmr_refresh_hash__
+    const hasAuthCookie = authCookies.length > 0; // Allow any auth cookies
     const hasAuthHeader = !!authHeader;
 
     console.log('🔐 MIDDLEWARE DEBUG: All cookies:', allCookies.map(c => c.name));
@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
     console.log('🔐 MIDDLEWARE DEBUG: Is development:', isDevelopment);
     console.log('🔐 MIDDLEWARE DEBUG: Path:', path);
 
-    // Allow access if authenticated or in development with auth cookies
+    // Allow access if authenticated or in development
     if (hasAuthCookie || hasAuthHeader || isDevelopment) {
       console.log('🔐 MIDDLEWARE DEBUG: Allowing access');
       return NextResponse.next();

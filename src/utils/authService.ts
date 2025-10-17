@@ -70,7 +70,7 @@ class AuthService {
             // Create default profile if none exists
             const defaultProfile: Omit<UserProfile, 'uid'> = {
               email: user.email || '',
-              fullName: user.displayName || user.email || 'User',
+              fullName: user.displayName || user.email?.split('@')[0] || 'User',
               position: 'Attendee',
               company: '',
               category: 'Visitor',
@@ -328,26 +328,21 @@ class AuthService {
       this.authState.error = null;
       this.notifyListeners();
 
+      console.log('🔐 AuthService: Attempting sign in for:', email);
       const userCred = await signInWithEmailAndPassword(auth, email, password);
+      console.log('🔐 AuthService: Firebase sign in successful for:', userCred.user.email || email);
 
-      // Wait for auth state to update with profile data
-      await new Promise(resolve => {
-        const unsubscribe = this.subscribe((state) => {
-          if (state.profile && !state.loading) {
-            unsubscribe();
-            resolve(state.profile);
-          }
-        });
-      });
-
+      // The auth state listener will handle profile loading and redirection
+      // No need to wait here - the AuthForm component is already subscribed
+      console.log('🔐 AuthService: Sign in process completed successfully');
       return { success: true };
     } catch (error) {
+      console.error('🔐 AuthService: Sign in error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
       this.authState.error = errorMessage;
-      return { success: false, error: errorMessage };
-    } finally {
       this.authState.loading = false;
       this.notifyListeners();
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -366,7 +361,7 @@ class AuthService {
       if (!userDoc.exists()) {
         const defaultProfile: Omit<UserProfile, 'uid'> = {
           email: user.email || '',
-          fullName: user.displayName || user.email || 'User',
+          fullName: user.displayName || user.email?.split('@')[0] || 'User',
           position: 'Attendee',
           company: '',
           category: 'Visitor',

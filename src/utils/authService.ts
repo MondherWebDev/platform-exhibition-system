@@ -467,11 +467,24 @@ class AuthService {
 
     switch (category) {
       case 'Organizer':
-        return '/dashboard';
+      case 'Administrator':
+        return '/dashboard'; // Both Organizer and Administrator go to main dashboard
       case 'Agent':
         return '/checkin'; // Redirect agents directly to check-in system
       case 'Hosted Buyer':
         return '/dashboard/hostedbuyer';
+      case 'Exhibitor':
+        return '/dashboard/exhibitor';
+      case 'Visitor':
+        return '/dashboard/visitor';
+      case 'Media':
+        return '/dashboard/media';
+      case 'Speaker':
+        return '/dashboard/speaker';
+      case 'Sponsor':
+        return '/dashboard/sponsor';
+      case 'VIP':
+        return '/dashboard/vip';
       default:
         return `/dashboard/${category.toLowerCase().replace(/\s+/g, '-')}`;
     }

@@ -106,28 +106,24 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
         }
 
         // Don't auto-redirect if we're on the signin page - let users manually sign in
+        // This prevents infinite redirect loops and allows manual sign in flow
         const isOnSignInPage = window.location.pathname === '/signin';
         if (isOnSignInPage) {
           console.log('🔐 AuthForm: User authenticated but staying on signin page for manual login');
           return;
         }
 
-        // Handle successful authentication and redirect only for non-event pages and non-signin pages
+        // Handle successful authentication and redirect based on user role
         const targetPath = authService.getRedirectPath(authState.profile.category, redirectPath || undefined);
-        console.log('🔐 AuthForm: Redirecting to:', targetPath);
+        console.log('🔐 AuthForm: Redirecting user to:', targetPath, 'Category:', authState.profile.category);
 
-        // Special handling for Organizer category - always redirect to /dashboard
-        if (authState.profile.category === 'Organizer' || authState.profile.category === 'Administrator') {
-          window.location.href = '/dashboard';
-        } else {
-          // Use window.location for immediate redirect for other categories
-          window.location.href = targetPath;
-        }
+        // Use window.location for immediate redirect to appropriate dashboard based on role
+        window.location.href = targetPath;
       }
     });
 
     return unsubscribe;
-  }, []); // Remove dependencies to prevent infinite re-renders
+  }, [redirectPath]); // Include redirectPath as dependency
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,8 +178,8 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
         setSponsorTier('gold');
         setOrganizerPasscode('');
 
-        // Redirect to dashboard directly - badge is already created by authService
-        router.push('/dashboard/visitor');
+        // Don't redirect here - let the auth state subscription handle role-based redirection
+        console.log('✅ Registration successful - auth state subscription will handle redirect');
       } else {
         setError(result.error || 'Registration failed');
       }

@@ -206,7 +206,7 @@ export default function CentralDashboard() {
         const userDoc = await getDoc(doc(db, 'Users', u.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
-          if (data.category === 'Organizer' || data.category === 'Admin' || data.isAdmin) {
+          if (data.category === 'Organizer' || data.category === 'Administrator' || data.category === 'Admin' || data.isAdmin) {
             setUserProfile(data);
           }
         }
@@ -836,13 +836,13 @@ export default function CentralDashboard() {
     );
   }
 
-  if (!userProfile || (userProfile.category !== 'Organizer' && userProfile.category !== 'Admin')) {
+  if (!userProfile || (userProfile.category !== 'Organizer' && userProfile.category !== 'Administrator' && userProfile.category !== 'Admin')) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <FontAwesomeIcon icon={faTimesCircle} className="w-16 h-16 mx-auto mb-4 text-red-500" />
           <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-          <p>Only organizers can access the central dashboard.</p>
+          <p>Only organizers and administrators can access the central dashboard.</p>
         </div>
       </div>
     );

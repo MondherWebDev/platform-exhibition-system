@@ -11,13 +11,21 @@ export default function SignIn() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      // Don't auto-redirect - let users manually sign in
-      // This ensures they always see the sign-in form
+      if (isMounted) {
+        setUser(u);
+        // Don't auto-redirect - let users manually sign in
+        // This ensures they always see the sign-in form
+      }
     });
-    return () => unsubscribe();
-  }, [router, email]);
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []); // Remove dependencies to prevent infinite re-renders
 
   // Show form regardless of auth state - let users manually sign in
 

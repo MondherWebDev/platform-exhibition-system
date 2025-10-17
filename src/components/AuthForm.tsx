@@ -105,12 +105,19 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
           return;
         }
 
-        // Handle successful authentication and redirect only for non-event pages
+        // Don't auto-redirect if we're on the signin page - let users manually sign in
+        const isOnSignInPage = window.location.pathname === '/signin';
+        if (isOnSignInPage) {
+          console.log('🔐 AuthForm: User authenticated but staying on signin page for manual login');
+          return;
+        }
+
+        // Handle successful authentication and redirect only for non-event pages and non-signin pages
         const targetPath = authService.getRedirectPath(authState.profile.category, redirectPath || undefined);
         console.log('🔐 AuthForm: Redirecting to:', targetPath);
 
         // Special handling for Organizer category - always redirect to /dashboard
-        if (authState.profile.category === 'Organizer' || authState.profile.category === 'Admin') {
+        if (authState.profile.category === 'Organizer' || authState.profile.category === 'Administrator') {
           window.location.href = '/dashboard';
         } else {
           // Use window.location for immediate redirect for other categories
@@ -120,7 +127,7 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
     });
 
     return unsubscribe;
-  }, [router, redirectPath]);
+  }, []); // Remove dependencies to prevent infinite re-renders
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

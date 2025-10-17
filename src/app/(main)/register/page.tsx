@@ -191,7 +191,7 @@ export default function Registration() {
       }
 
       console.log("User registered successfully:", firebaseUser.uid);
-      setSubmitMessage("Registration successful! You can now sign in with your email and password.");
+      setSubmitMessage("Registration successful! Redirecting to sign in...");
 
       // Reset form after successful submission
       setFormData({
@@ -212,6 +212,18 @@ export default function Registration() {
         logoFile: null,
         logoPreview: ""
       });
+
+      // Sign out the user and redirect to signin page after successful registration
+      setTimeout(async () => {
+        try {
+          await auth.signOut();
+          router.push('/signin?message=Registration successful! Please sign in with your email and password.');
+        } catch (signOutError) {
+          console.error('Error signing out after registration:', signOutError);
+          // Even if sign out fails, redirect to signin page
+          router.push('/signin?message=Registration successful! Please sign in with your email and password.');
+        }
+      }, 2000);
 
     } catch (error) {
       console.error("Registration error:", error);

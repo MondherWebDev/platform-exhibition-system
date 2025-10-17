@@ -37,7 +37,13 @@ export default function Registration() {
   };
 
   const validateForm = () => {
-    const requiredFields = ['category', 'firstName', 'lastName', 'email', 'password', 'confirmPassword', 'mobile', 'hearAbout'];
+    const baseRequiredFields = ['category', 'firstName', 'lastName', 'email', 'password', 'confirmPassword', 'mobile'];
+
+    // For Exhibitor category, "hearAbout" is not required
+    const requiredFields = formData.category === 'Exhibitor'
+      ? baseRequiredFields
+      : [...baseRequiredFields, 'hearAbout'];
+
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
         return `Please fill in all required fields. Missing: ${field}`;
@@ -975,28 +981,30 @@ export default function Registration() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  How did you hear about us? *
-                </label>
-                <select
-                  name="hearAbout"
-                  value={formData.hearAbout}
-                  onChange={handleInputChange}
-                  className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                >
-                  <option value="">Select Option</option>
-                  <option value="exhibitor">Exhibitor</option>
-                  <option value="word_of_mouth">Word of Mouth</option>
-                  <option value="website">Website</option>
-                  <option value="facebook">Facebook</option>
-                  <option value="instagram">Instagram</option>
-                  <option value="linkedin">LinkedIn</option>
-                  <option value="twitter">Twitter</option>
-                  <option value="youtube">YouTube</option>
-                  <option value="newspaper_ads">Newspaper Ads</option>
-                </select>
-              </div>
+              {formData.category !== 'Exhibitor' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    How did you hear about us? *
+                  </label>
+                  <select
+                    name="hearAbout"
+                    value={formData.hearAbout}
+                    onChange={handleInputChange}
+                    className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  >
+                    <option value="">Select Option</option>
+                    <option value="exhibitor">Exhibitor</option>
+                    <option value="word_of_mouth">Word of Mouth</option>
+                    <option value="website">Website</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="twitter">Twitter</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="newspaper_ads">Newspaper Ads</option>
+                  </select>
+                </div>
+              )}
 
 
             </div>

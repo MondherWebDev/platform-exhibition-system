@@ -2541,7 +2541,7 @@ export default function OrganizerDashboard({}: OrganizerDashboardProps) {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Event Builder</h2>
                 <button
-                  onClick={() => window.open('/events', '_blank')}
+                  onClick={() => router.push('/events')}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <FontAwesomeIcon icon={faEdit} />
@@ -2555,7 +2555,7 @@ export default function OrganizerDashboard({}: OrganizerDashboardProps) {
                   <h3 className="text-xl font-semibold text-white mb-2">Event Builder</h3>
                   <p className="text-gray-400 mb-4">Create and manage your events with the comprehensive event builder tool.</p>
                   <button
-                    onClick={() => window.open('/events', '_blank')}
+                    onClick={() => router.push('/events')}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2 mx-auto"
                   >
                     <FontAwesomeIcon icon={faEdit} />
@@ -2572,7 +2572,7 @@ export default function OrganizerDashboard({}: OrganizerDashboardProps) {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">Floorplan Designer</h2>
                 <button
-                  onClick={() => window.open('/floorplan', '_blank')}
+                  onClick={() => router.push('/floorplan')}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <FontAwesomeIcon icon={faMapMarkerAlt} />
@@ -2586,7 +2586,7 @@ export default function OrganizerDashboard({}: OrganizerDashboardProps) {
                   <h3 className="text-xl font-semibold text-white mb-2">Floorplan Designer</h3>
                   <p className="text-gray-400 mb-4">Design and manage your event floorplan with interactive booth placement and exhibitor mapping.</p>
                   <button
-                    onClick={() => window.open('/floorplan', '_blank')}
+                    onClick={() => router.push('/floorplan')}
                     className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2 mx-auto"
                   >
                     <FontAwesomeIcon icon={faMapMarkerAlt} />

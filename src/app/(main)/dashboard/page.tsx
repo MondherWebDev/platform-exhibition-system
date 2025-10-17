@@ -1065,23 +1065,23 @@ export default function CentralDashboard() {
               <p className="text-blue-200 text-xs">{stats.totalLeads} leads</p>
             </a>
 
-            <a
-              href="/dashboard/organizer/events"
-              className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-lg p-4 border border-blue-500/30 hover:border-blue-400/50 transition-colors text-center"
+            <button
+              onClick={() => window.location.href = '/events'}
+              className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-lg p-4 border border-blue-500/30 hover:border-blue-400/50 transition-colors text-center w-full"
             >
               <FontAwesomeIcon icon={faEdit} className="text-blue-400 text-2xl mb-2" />
               <h4 className="text-white font-semibold text-sm">Event Builder</h4>
               <p className="text-blue-200 text-xs">Create & manage events</p>
-            </a>
+            </button>
 
-            <a
-              href="/dashboard/organizer/floorplan-designer"
-              className="bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-lg p-4 border border-green-500/30 hover:border-green-400/50 transition-colors text-center"
+            <button
+              onClick={() => window.location.href = '/floorplan'}
+              className="bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-lg p-4 border border-green-500/30 hover:border-green-400/50 transition-colors text-center w-full"
             >
               <FontAwesomeIcon icon={faMapMarkerAlt} className="text-green-400 text-2xl mb-2" />
               <h4 className="text-white font-semibold text-sm">Floorplan Designer</h4>
               <p className="text-green-200 text-xs">Design event layout</p>
-            </a>
+            </button>
 
             <a
               href="/checkin"

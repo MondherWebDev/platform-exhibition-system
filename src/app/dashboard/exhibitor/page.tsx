@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '../../../firebaseConfig';
+import { authService } from '../../../utils/authService';
 import { doc, getDoc, getDocs, onSnapshot, collection, query, where, orderBy, addDoc, serverTimestamp, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { QRCodeSVG } from 'qrcode.react';
 import { getUserBadge } from '../../../utils/badgeService';
@@ -144,17 +145,26 @@ export default function ExhibitorDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (u) => {
-      setUser(u);
-      if (u) {
-        const snap = await getDoc(doc(db, 'Users', u.uid));
-        const data = snap.exists() ? snap.data() : null;
-        setProfile(data);
+    const unsubscribe = authService.subscribe((authState) => {
+      setUser(authState.user);
+      setProfile(authState.profile);
+      setLoading(!authState.initialized);
+
+      // If user is authenticated but no profile, try to fetch it
+      if (authState.user && !authState.profile && authState.initialized) {
+        getDoc(doc(db, 'Users', authState.user.uid)).then((snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+            setProfile(data);
+          }
+        }).catch((error) => {
+          console.error('Error fetching user profile:', error);
+        });
       }
-      setLoading(false);
     });
-    return () => unsubscribe();
-  }, [router]);
+
+    return unsubscribe;
+  }, []);
 
   // Load global app settings
   useEffect(() => {

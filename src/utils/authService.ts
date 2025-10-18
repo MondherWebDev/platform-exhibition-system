@@ -469,21 +469,21 @@ class AuthService {
       case 'Agent':
         return '/checkin'; // Redirect agents directly to check-in system
       case 'Hosted Buyer':
-        return '/dashboard/hostedbuyer';
+        return '/dashboard'; // Redirect hosted buyers to main dashboard
       case 'Exhibitor':
-        return '/dashboard/exhibitor';
+        return '/dashboard'; // Redirect exhibitors to main dashboard
       case 'Visitor':
-        return '/dashboard/visitor';
+        return '/dashboard'; // Redirect visitors to main dashboard
       case 'Media':
-        return '/dashboard/media';
+        return '/dashboard'; // Redirect media to main dashboard
       case 'Speaker':
-        return '/dashboard/speaker';
+        return '/dashboard'; // Redirect speakers to main dashboard
       case 'Sponsor':
-        return '/dashboard/sponsor';
+        return '/dashboard'; // Redirect sponsors to main dashboard
       case 'VIP':
-        return '/dashboard/vip';
+        return '/dashboard'; // Redirect VIPs to main dashboard
       default:
-        return `/dashboard/${category.toLowerCase().replace(/\s+/g, '-')}`;
+        return '/dashboard'; // Default fallback to main dashboard
     }
   }
 

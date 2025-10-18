@@ -106,8 +106,12 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
           return;
         }
 
-        // Allow redirect from signin page and dashboard pages after successful authentication
-        // Users should be redirected to their appropriate dashboard
+        // Don't redirect if we're already on a dashboard page (prevents redirect loops)
+        const isOnDashboardPage = window.location.pathname.startsWith('/dashboard');
+        if (isOnDashboardPage) {
+          console.log('🔐 AuthForm: User already on dashboard page');
+          return;
+        }
 
         // Handle successful authentication and redirect based on user role
         const targetPath = authService.getRedirectPath(authState.profile.category, redirectPath || undefined);
@@ -126,7 +130,7 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
     });
 
     return unsubscribe;
-  }, [redirectPath]); // Include redirectPath as dependency
+  }, [redirectPath, router]); // Include router as dependency
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();

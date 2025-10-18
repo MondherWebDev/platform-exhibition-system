@@ -5,6 +5,7 @@ import { collection, getDocs, doc, updateDoc, setDoc, getDoc, query, where, orde
 import { processQRCodeScan, QRScanResult } from "../../../../utils/badgeService";
 import QRCodeScanner from "../../../../components/QRCodeScanner";
 import ClientOnly from '../../../../components/ClientOnly';
+import { signOut } from "firebase/auth";
 
 // Simple Icon component using text symbols
 const Icon = ({ name, className = "w-4 h-4" }: { name: string; className?: string }) => {
@@ -515,6 +516,15 @@ export default function ExhibitorLeadCapture() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      window.location.href = '/signin';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   if (!isClient) {
     return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">Loading...</div>;
   }
@@ -536,12 +546,20 @@ export default function ExhibitorLeadCapture() {
               <p className="text-white font-medium">{exhibitorInfo?.fullName || 'Exhibitor'}</p>
               <p className="text-blue-200 text-sm">{exhibitorInfo?.company || 'Company'}</p>
             </div>
-            <button
-              onClick={() => window.location.href = '/'}
-              className="text-blue-300 hover:text-white transition-colors"
-            >
-              Back to Home
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleLogout}
+                className="text-red-300 hover:text-red-400 transition-colors"
+              >
+                Logout
+              </button>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="text-blue-300 hover:text-white transition-colors"
+              >
+                Back to Home
+              </button>
+            </div>
           </div>
         </div>
       </header>

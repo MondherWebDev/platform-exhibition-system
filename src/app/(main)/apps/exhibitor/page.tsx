@@ -984,7 +984,7 @@ export default function ExhibitorLeadCapture() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="md:col-span-1">
                       <label className="block text-gray-300 font-medium mb-2">Email</label>
                       {isEditingProfile ? (
                         <input
@@ -994,10 +994,10 @@ export default function ExhibitorLeadCapture() {
                           className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       ) : (
-                        <p className="text-white">{exhibitorInfo?.contactEmail || 'Not provided'}</p>
+                        <p className="text-white break-words">{exhibitorInfo?.contactEmail || 'Not provided'}</p>
                       )}
                     </div>
-                    <div>
+                    <div className="md:col-span-1">
                       <label className="block text-gray-300 font-medium mb-2">Phone</label>
                       {isEditingProfile ? (
                         <input
@@ -1181,7 +1181,6 @@ export default function ExhibitorLeadCapture() {
                 onScanResult={(result: QRScanResult) => {
                   if (result.success) {
                     setSuccess(result.message);
-                    setShowScannerModal(false);
                     // Reload leads and stats after successful scan
                     setTimeout(() => {
                       loadLeads();
@@ -1191,6 +1190,7 @@ export default function ExhibitorLeadCapture() {
                     setError(result.error || 'Lead capture failed');
                   }
                 }}
+                onClose={() => setShowScannerModal(false)}
               />
 
               {loading && (

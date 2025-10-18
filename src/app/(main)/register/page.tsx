@@ -165,22 +165,35 @@ export default function Registration() {
       const globalSettings = await getDoc(doc(db, 'AppSettings', 'global'));
       if (globalSettings.exists()) {
         const settings = globalSettings.data() as any;
-        if (settings.eventId && settings.eventId !== 'default') {
+        console.log('Global settings:', settings);
+
+        if (settings.eventId && settings.eventId !== 'default' && settings.eventId !== '') {
+          console.log('Adding user to event-specific collection:', settings.eventId);
+
           // Add to event-specific collection based on category
           if (formData.category === 'Exhibitor') {
             await setDoc(doc(db, 'Events', settings.eventId, 'Exhibitors', firebaseUser.uid), {
               ...userData,
               eventId: settings.eventId,
-              addedAt: new Date().toISOString()
+              addedAt: new Date().toISOString(),
+              boothId: userData.boothId || '',
+              companyDescription: formData.companyDescription || '',
+              logoUrl: userData.logoUrl || ''
             });
+            console.log('✅ Added exhibitor to event collection');
           } else if (formData.category === 'Hosted Buyer') {
             await setDoc(doc(db, 'Events', settings.eventId, 'HostedBuyers', firebaseUser.uid), {
               ...userData,
               eventId: settings.eventId,
               addedAt: new Date().toISOString()
             });
+            console.log('✅ Added hosted buyer to event collection');
           }
+        } else {
+          console.log('❌ No valid eventId found in global settings');
         }
+      } else {
+        console.log('❌ No global settings found');
       }
 
       // Create badge for the new user

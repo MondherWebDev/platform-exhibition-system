@@ -155,6 +155,15 @@ export default function ExhibitorLeadCapture() {
             bio: data.bio || data.companyDescription || '',
             logoUrl: data.logoUrl || ''
           });
+
+          console.log('Loaded exhibitor data:', {
+            fullName: data.fullName,
+            company: data.company,
+            bio: data.bio,
+            companyDescription: data.companyDescription,
+            logoUrl: data.logoUrl,
+            boothId: data.boothId
+          });
         }
       }
     };

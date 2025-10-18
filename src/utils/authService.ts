@@ -469,19 +469,19 @@ class AuthService {
       case 'Agent':
         return '/checkin'; // Redirect agents directly to check-in system
       case 'Hosted Buyer':
-        return '/dashboard'; // Redirect hosted buyers to main dashboard
+        return '/hosted-buyers'; // Redirect hosted buyers to their specific page
       case 'Exhibitor':
-        return '/dashboard'; // Redirect exhibitors to main dashboard
+        return '/apps/exhibitor'; // Redirect exhibitors to their specific app page
       case 'Visitor':
-        return '/dashboard'; // Redirect visitors to main dashboard
+        return '/apps/visitor'; // Redirect visitors to their specific app page
       case 'Media':
-        return '/dashboard'; // Redirect media to main dashboard
+        return '/dashboard'; // Redirect media to main dashboard (can be customized later)
       case 'Speaker':
-        return '/dashboard'; // Redirect speakers to main dashboard
+        return '/dashboard'; // Redirect speakers to main dashboard (can be customized later)
       case 'Sponsor':
-        return '/dashboard'; // Redirect sponsors to main dashboard
+        return '/dashboard'; // Redirect sponsors to main dashboard (can be customized later)
       case 'VIP':
-        return '/dashboard'; // Redirect VIPs to main dashboard
+        return '/dashboard'; // Redirect VIPs to main dashboard (can be customized later)
       default:
         return '/dashboard'; // Default fallback to main dashboard
     }

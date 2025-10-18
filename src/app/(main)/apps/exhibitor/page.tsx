@@ -903,18 +903,20 @@ export default function ExhibitorLeadCapture() {
                 {/* Profile Picture and Basic Info */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+                    <div className="flex-shrink-0">
                       {exhibitorInfo?.logoUrl ? (
                         <img
                           src={exhibitorInfo.logoUrl}
-                          alt="Logo"
-                          className="w-full h-full object-cover rounded-full"
+                          alt="Company Logo"
+                          className="w-20 h-12 object-contain bg-white/10 rounded-lg p-2"
                         />
                       ) : (
-                        <Icon name="building" className="w-8 h-8 text-white" />
+                        <div className="w-20 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                          <Icon name="building" className="w-8 h-8 text-white" />
+                        </div>
                       )}
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <h3 className="text-xl font-bold text-white">
                         {exhibitorInfo?.fullName || 'Exhibitor Name'}
                       </h3>

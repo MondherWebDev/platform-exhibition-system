@@ -155,7 +155,7 @@ export default function ExhibitorLeadCapture() {
             industry: data.industry || '',
             companySize: data.companySize || '',
             boothId: data.boothId || '',
-            bio: data.bio || data.companyDescription || '',
+            bio: data.description || data.bio || '',
             logoUrl: data.logoUrl || ''
           });
 
@@ -163,6 +163,7 @@ export default function ExhibitorLeadCapture() {
             fullName: data.fullName,
             company: data.company,
             bio: data.bio,
+            description: data.description,
             companyDescription: data.companyDescription,
             logoUrl: data.logoUrl,
             boothId: data.boothId,

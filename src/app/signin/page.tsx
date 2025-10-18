@@ -1,33 +1,13 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { auth } from "../../firebaseConfig";
 import AuthSection from "../AuthSection";
 
 export default function SignIn() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get('email');
-  const [user, setUser] = useState<any>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      if (isMounted) {
-        setUser(u);
-        // Allow auto-redirect after successful authentication
-        // The AuthForm component will handle the redirection logic
-      }
-    });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, []); // Remove dependencies to prevent infinite re-renders
-
-  // Show form for unauthenticated users, redirect authenticated users
+  // Let AuthForm component handle all authentication logic including redirects
 
   return (
     <div className="min-h-screen w-full bg-gray-50">

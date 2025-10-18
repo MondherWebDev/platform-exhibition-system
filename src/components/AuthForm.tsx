@@ -105,15 +105,24 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
           return;
         }
 
-        // Allow redirect from signin page after successful authentication
+        // Allow redirect from signin page and dashboard pages after successful authentication
         // Users should be redirected to their appropriate dashboard
 
         // Handle successful authentication and redirect based on user role
         const targetPath = authService.getRedirectPath(authState.profile.category, redirectPath || undefined);
         console.log('🔐 AuthForm: Redirecting user to:', targetPath, 'Category:', authState.profile.category);
+        console.log('🔐 AuthForm: User profile data:', {
+          uid: authState.profile.uid,
+          email: authState.profile.email,
+          category: authState.profile.category,
+          fullName: authState.profile.fullName
+        });
 
-        // Use window.location for immediate redirect to appropriate dashboard based on role
-        window.location.href = targetPath;
+        // Use Next.js router for client-side navigation to prevent page reload
+        // Add a small delay to ensure the auth state is fully updated
+        setTimeout(() => {
+          router.push(targetPath);
+        }, 100);
       }
     });
 

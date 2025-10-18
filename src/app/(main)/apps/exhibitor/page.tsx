@@ -155,7 +155,7 @@ export default function ExhibitorLeadCapture() {
             industry: data.industry || '',
             companySize: data.companySize || '',
             boothId: data.boothId || '',
-            bio: data.description || data.bio || '',
+            bio: data.companyDescription || data.description || data.bio || '',
             logoUrl: data.logoUrl || ''
           });
 
@@ -167,7 +167,8 @@ export default function ExhibitorLeadCapture() {
             companyDescription: data.companyDescription,
             logoUrl: data.logoUrl,
             boothId: data.boothId,
-            uid: data.uid
+            uid: data.uid,
+            allFields: Object.keys(data)
           });
         }
       }
@@ -1180,7 +1181,7 @@ export default function ExhibitorLeadCapture() {
                           industry: exhibitorInfo.industry || '',
                           companySize: exhibitorInfo.companySize || '',
                           boothId: exhibitorInfo.boothId || '',
-                          bio: exhibitorInfo.bio || '',
+                          bio: exhibitorInfo.companyDescription || exhibitorInfo.bio || '',
                           logoUrl: exhibitorInfo.logoUrl || ''
                         });
                       }

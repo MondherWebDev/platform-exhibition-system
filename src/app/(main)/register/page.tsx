@@ -183,6 +183,7 @@ export default function Registration() {
         companySize: '',
         logoUrl: logoUrl || '',
         bio: '',
+        companyDescription: formData.companyDescription || '',
         linkedin: '',
         twitter: '',
         interests: '',

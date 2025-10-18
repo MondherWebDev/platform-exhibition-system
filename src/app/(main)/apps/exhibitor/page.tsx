@@ -552,9 +552,21 @@ export default function ExhibitorLeadCapture() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-white font-medium">{exhibitorInfo?.fullName || 'Exhibitor'}</p>
-              <p className="text-blue-200 text-sm">{exhibitorInfo?.company || 'Company'}</p>
+            <div className="flex items-center gap-3">
+              {exhibitorInfo?.logoUrl ? (
+                <img
+                  src={exhibitorInfo.logoUrl}
+                  alt="Company Logo"
+                  className="w-12 h-8 object-contain bg-white/10 rounded-lg p-1"
+                />
+              ) : (
+                <div className="w-12 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Icon name="building" className="w-6 h-6 text-white" />
+                </div>
+              )}
+              <div className="text-left">
+                <p className="text-white font-medium">{exhibitorInfo?.company || 'Company'}</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button

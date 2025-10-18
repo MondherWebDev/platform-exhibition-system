@@ -6,7 +6,7 @@ import { collection, doc, onSnapshot, query, orderBy, getDoc } from "firebase/fi
 import { auth } from "../../../firebaseConfig";
 import AuthSection from "../../AuthSection";
 
-interface Exhibitor { id: string; name: string; description?: string; boothId?: string; tags?: string[]; logoUrl?: string; }
+interface Exhibitor { id: string; name: string; company?: string; description?: string; boothId?: string; tags?: string[]; logoUrl?: string; }
 interface Sponsor { id: string; name: string; tier: "gold"|"silver"|"bronze"; logoUrl?: string; }
 interface Speaker { id: string; name: string; title?: string; company?: string; photoUrl?: string; tags?: string[]; }
 interface HostedBuyer { id: string; name: string; company?: string; notes?: string; photoUrl?: string; }
@@ -436,12 +436,14 @@ export default function EventPublicPage() {
                   </div>
                   <div className="pt-6 pb-4">
                     {x.logoUrl ? (
-                      <img src={x.logoUrl} alt={x.name} className="mx-auto h-24 sm:h-28 object-contain" />
+                      <img src={x.logoUrl} alt={x.company || x.name} className="mx-auto h-24 sm:h-28 object-contain" />
                     ) : (
-                      <div className="mx-auto h-24 sm:h-28 w-full bg-white/5 rounded" />
+                      <div className="mx-auto h-24 sm:h-28 w-full bg-white/5 rounded flex items-center justify-center">
+                        <span className="text-white/60 text-sm">No Logo</span>
+                      </div>
                     )}
                   </div>
-                  <div className="text-center font-extrabold text-white text-lg leading-snug">{x.name}</div>
+                  <div className="text-center font-extrabold text-white text-lg leading-snug">{x.company || x.name}</div>
                 </button>
               ))}
             </div>

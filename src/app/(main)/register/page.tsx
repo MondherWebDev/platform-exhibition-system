@@ -42,8 +42,8 @@ export default function Registration() {
   const validateForm = () => {
     const baseRequiredFields = ['category', 'firstName', 'lastName', 'email', 'password', 'confirmPassword', 'mobile'];
 
-    // For Exhibitor category, "hearAbout" is not required
-    const requiredFields = formData.category === 'Exhibitor'
+    // For Exhibitor and Sponsor categories, "hearAbout" is not required
+    const requiredFields = (formData.category === 'Exhibitor' || formData.category === 'Sponsor')
       ? baseRequiredFields
       : [...baseRequiredFields, 'hearAbout'];
 
@@ -180,7 +180,7 @@ export default function Registration() {
                 addedAt: new Date().toISOString(),
                 boothId: userData.boothId || '',
                 companyDescription: formData.companyDescription || '',
-                logoUrl: userData.logoUrl || '',
+                logoUrl: formData.logoPreview || userData.logoUrl || '',
                 name: userData.fullName,
                 description: formData.companyDescription || '',
                 tags: []
@@ -200,6 +200,34 @@ export default function Registration() {
 
               await setDoc(doc(db, 'Events', settings.eventId, 'HostedBuyers', firebaseUser.uid), buyerData);
               console.log('✅ Successfully added hosted buyer to event collection');
+            } else if (formData.category === 'Sponsor') {
+              const sponsorData = {
+                ...userData,
+                eventId: settings.eventId,
+                addedAt: new Date().toISOString(),
+                name: userData.fullName,
+                tier: userData.sponsorTier || 'bronze',
+                logoUrl: formData.logoPreview || userData.logoUrl || '',
+                website: userData.website || '',
+                description: formData.companyDescription || ''
+              };
+
+              await setDoc(doc(db, 'Events', settings.eventId, 'Sponsors', firebaseUser.uid), sponsorData);
+              console.log('✅ Successfully added sponsor to event collection');
+            } else if (formData.category === 'Speaker') {
+              const speakerData = {
+                ...userData,
+                eventId: settings.eventId,
+                addedAt: new Date().toISOString(),
+                name: userData.fullName,
+                title: userData.position || 'Speaker',
+                company: userData.company || '',
+                bio: formData.companyDescription || userData.bio || '',
+                tags: []
+              };
+
+              await setDoc(doc(db, 'Events', settings.eventId, 'Speakers', firebaseUser.uid), speakerData);
+              console.log('✅ Successfully added speaker to event collection');
             }
           } catch (eventError) {
             console.error('❌ Error adding user to event collection:', eventError);
@@ -336,6 +364,7 @@ export default function Registration() {
                   <option value="Visitor">Visitor</option>
                   <option value="Exhibitor">Exhibitor</option>
                   <option value="Speaker">Speaker</option>
+                  <option value="Sponsor">Sponsor</option>
                   <option value="Media">Media</option>
                   <option value="Hosted Buyer">Hosted Buyer</option>
                   <option value="VIP">VIP</option>
@@ -1049,7 +1078,7 @@ export default function Registration() {
                 </select>
               </div>
 
-              {formData.category !== 'Exhibitor' && (
+              {formData.category !== 'Exhibitor' && formData.category !== 'Sponsor' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     How did you hear about us? *

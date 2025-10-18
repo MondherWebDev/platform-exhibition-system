@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { db, auth } from "../../../../firebaseConfig";
-import { collection, getDocs, doc, updateDoc, setDoc, getDoc, query, where, orderBy, limit, increment, onSnapshot } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { collection, getDocs, doc, updateDoc, setDoc, getDoc, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { processQRCodeScan, QRScanResult } from "../../../../utils/badgeService";
 import QRCodeScanner from "../../../../components/QRCodeScanner";
 import ClientOnly from '../../../../components/ClientOnly';
@@ -15,36 +14,25 @@ const Icon = ({ name, className = "w-4 h-4" }: { name: string; className?: strin
     exclamationTriangle: "⚠️",
     checkCircle: "✅",
     users: "👥",
-    sortUp: "↑",
-    sortDown: "↓",
-    refresh: "🔄",
-    eye: "👁️",
+    camera: "📷",
+    edit: "✏️",
+    save: "💾",
+    user: "👤",
+    building: "🏢",
+    phone: "📞",
+    globe: "🌐",
+    mapPin: "📍",
+    image: "🖼️",
     star: "⭐",
     trophy: "🏆",
     crown: "👑",
     timesCircle: "❌",
-    infoCircle: "ℹ️"
+    eye: "👁️",
+    refresh: "🔄"
   };
 
   const icon = iconMap[name] || "•";
   return <span className={className}>{icon}</span>;
-};
-
-// Dynamic imports for FontAwesome icons to reduce bundle size
-const loadFontAwesomeIcons = async () => {
-  const { FontAwesomeIcon } = await import('@fortawesome/react-fontawesome');
-  const {
-    faStar, faHandshake, faTrophy, faCrown, faTimesCircle, faInfoCircle,
-    faSpinner, faExclamationTriangle, faCheckCircle, faUsers, faSortUp,
-    faSortDown, faRefresh, faEye
-  } = await import('@fortawesome/free-solid-svg-icons');
-
-  return {
-    FontAwesomeIcon,
-    faStar, faHandshake, faTrophy, faCrown, faTimesCircle, faInfoCircle,
-    faSpinner, faExclamationTriangle, faCheckCircle, faUsers, faSortUp,
-    faSortDown, faRefresh, faEye
-  };
 };
 
 interface LeadRecord {
@@ -75,14 +63,17 @@ interface ExhibitorStats {
 }
 
 export default function ExhibitorLeadCapture() {
-  const [currentView, setCurrentView] = useState<'scanner' | 'leads' | 'stats'>('scanner');
-  const [, setScanResult] = useState<QRScanResult | null>(null);
+  const [currentView, setCurrentView] = useState<'scanner' | 'leads' | 'stats' | 'profile'>('scanner');
+  const [isClient, setIsClient] = useState(false);
+  const [exhibitorInfo, setExhibitorInfo] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [isClient, setIsClient] = useState(false);
-  const [, setCurrentEventId] = useState<string>('default');
-  const [exhibitorInfo, setExhibitorInfo] = useState<{fullName?: string; company?: string} | null>(null);
+  const [currentEventId, setCurrentEventId] = useState<string>('default');
+  const [scanResult, setScanResult] = useState<QRScanResult | null>(null);
+
+  // Scanner modal state
+  const [showScannerModal, setShowScannerModal] = useState(false);
 
   // Leads state
   const [leads, setLeads] = useState<LeadRecord[]>([]);
@@ -109,6 +100,24 @@ export default function ExhibitorLeadCapture() {
   const [leadStatus, setLeadStatus] = useState<'new' | 'contacted' | 'qualified' | 'converted' | 'rejected'>('new');
   const [followUpDate, setFollowUpDate] = useState('');
 
+  // Profile editing state
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    fullName: '',
+    position: '',
+    company: '',
+    contactEmail: '',
+    contactPhone: '',
+    website: '',
+    address: '',
+    industry: '',
+    companySize: '',
+    boothId: '',
+    bio: '',
+    logoUrl: ''
+  });
+
   useEffect(() => {
     setIsClient(true);
 
@@ -128,7 +137,23 @@ export default function ExhibitorLeadCapture() {
       if (currentUser) {
         const userDoc = await getDoc(doc(db, 'Users', currentUser.uid));
         if (userDoc.exists()) {
-          setExhibitorInfo(userDoc.data());
+          const data = userDoc.data();
+          setExhibitorInfo(data);
+          // Initialize profile form with current data
+          setProfileForm({
+            fullName: data.fullName || '',
+            position: data.position || '',
+            company: data.company || '',
+            contactEmail: data.contactEmail || '',
+            contactPhone: data.contactPhone || '',
+            website: data.website || '',
+            address: data.address || '',
+            industry: data.industry || '',
+            companySize: data.companySize || '',
+            boothId: data.boothId || '',
+            bio: data.bio || '',
+            logoUrl: data.logoUrl || ''
+          });
         }
       }
     };
@@ -388,11 +413,13 @@ export default function ExhibitorLeadCapture() {
       }, { merge: true });
 
       // Update local state
-      setLeads(prev => prev.map(lead =>
-        lead.id === leadId
-          ? { ...lead, status: newStatus, notes: notes || lead.notes, followUpDate: followUpDate || lead.followUpDate }
-          : lead
-      ));
+      setLeads((prev: LeadRecord[]) => {
+        return prev.map((lead: LeadRecord): LeadRecord =>
+          lead.id === leadId
+            ? { ...lead, status: newStatus, notes: notes || lead.notes, followUpDate: followUpDate || lead.followUpDate }
+            : lead
+        );
+      });
 
       setShowLeadModal(false);
       setSelectedLead(null);
@@ -408,6 +435,35 @@ export default function ExhibitorLeadCapture() {
     setLeadStatus(lead.status);
     setFollowUpDate(lead.followUpDate || '');
     setShowLeadModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!auth.currentUser) {
+      setError('User not authenticated');
+      return;
+    }
+
+    setProfileLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update user document in Firestore
+      await updateDoc(doc(db, 'Users', auth.currentUser.uid), {
+        ...profileForm,
+        updatedAt: new Date().toISOString()
+      });
+
+      // Update local state
+      setExhibitorInfo((prev: any) => ({ ...prev, ...profileForm }));
+      setIsEditingProfile(false);
+      setSuccess('Profile updated successfully!');
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      setError(error.message || 'Failed to update profile');
+    } finally {
+      setProfileLoading(false);
+    }
   };
 
   const formatTime = (timestamp: string) => {
@@ -501,7 +557,8 @@ export default function ExhibitorLeadCapture() {
                 : 'bg-white/10 text-gray-300 hover:bg-white/20'
             }`}
           >
-            QR Scanner
+            <Icon name="camera" className="w-4 h-4 mr-2" />
+            Scanner
           </button>
           <button
             onClick={() => setCurrentView('leads')}
@@ -511,6 +568,7 @@ export default function ExhibitorLeadCapture() {
                 : 'bg-white/10 text-gray-300 hover:bg-white/20'
             }`}
           >
+            <Icon name="users" className="w-4 h-4 mr-2" />
             My Leads ({leads.length})
           </button>
           <button
@@ -521,103 +579,95 @@ export default function ExhibitorLeadCapture() {
                 : 'bg-white/10 text-gray-300 hover:bg-white/20'
             }`}
           >
+            <Icon name="trophy" className="w-4 h-4 mr-2" />
             Statistics
+          </button>
+          <button
+            onClick={() => setCurrentView('profile')}
+            className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+              currentView === 'profile'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white/10 text-gray-300 hover:bg-white/20'
+            }`}
+          >
+            <Icon name="user" className="w-4 h-4 mr-2" />
+            Profile
           </button>
         </div>
 
-        {/* QR Scanner View */}
+        {/* Scanner Dashboard View */}
         {currentView === 'scanner' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Scanner */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
             <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-4">Lead Capture Scanner</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Lead Capture</h2>
               <p className="text-gray-300 mb-6">
-                Scan visitor QR codes to instantly capture their information as leads.
+                Click the scan button below to open the QR code scanner and capture visitor leads.
               </p>
 
-              <QRCodeScanner
-                userId={auth.currentUser?.uid || ''}
-                userCategory="Exhibitor"
-                mode="lead"
-                onScanResult={(result: QRScanResult) => {
-                  if (result.success) {
-                    setSuccess(result.message);
-                  } else {
-                    setError(result.error || 'Lead capture failed');
-                  }
-                }}
-              />
-
-              {loading && (
-                <div className="mt-4 text-center">
-                  <Icon name="spinner" className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-2" />
-                  <p className="text-gray-300">Capturing lead...</p>
-                </div>
-              )}
-
-              {error && (
-                <div className="mt-4 bg-red-500/10 border border-red-500/20 text-red-300 p-4 rounded-lg flex items-center gap-2">
-                  <Icon name="exclamationTriangle" className="w-5 h-5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {success && (
-                <div className="mt-4 bg-green-500/10 border border-green-500/20 text-green-300 p-4 rounded-lg flex items-center gap-2">
-                  <Icon name="checkCircle" className="w-5 h-5" />
-                  <span>{success}</span>
-                </div>
-              )}
+              <button
+                onClick={() => setShowScannerModal(true)}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-lg text-lg transition-all duration-200 flex items-center gap-3 mx-auto"
+              >
+                <Icon name="camera" className="w-6 h-6" />
+                Start Scanning
+              </button>
             </div>
 
             {/* Quick Stats */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-              <h2 className="text-xl font-bold text-white mb-4">Today's Performance</h2>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-green-500/20 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-400">{exhibitorStats.todayLeads}</div>
-                  <div className="text-sm text-gray-300">Leads Today</div>
-                </div>
-                <div className="bg-blue-500/20 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-400">{exhibitorStats.totalLeads}</div>
-                  <div className="text-sm text-gray-300">Total Leads</div>
-                </div>
-                <div className="bg-purple-500/20 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-400">{exhibitorStats.qualifiedLeads}</div>
-                  <div className="text-sm text-gray-300">Qualified</div>
-                </div>
-                <div className="bg-yellow-500/20 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-yellow-400">{exhibitorStats.averageLeadScore}%</div>
-                  <div className="text-sm text-gray-300">Avg Score</div>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
+                <Icon name="users" className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-blue-400">{exhibitorStats.totalLeads}</div>
+                <div className="text-sm text-gray-300">Total Leads</div>
               </div>
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
+                <Icon name="star" className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-yellow-400">{exhibitorStats.todayLeads}</div>
+                <div className="text-sm text-gray-300">Today</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
+                <Icon name="trophy" className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-purple-400">{exhibitorStats.qualifiedLeads}</div>
+                <div className="text-sm text-gray-300">Qualified</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20 text-center">
+                <Icon name="crown" className="w-8 h-8 text-green-400 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-green-400">{exhibitorStats.averageLeadScore}%</div>
+                <div className="text-sm text-gray-300">Avg Score</div>
+              </div>
+            </div>
 
-              {/* Recent Leads */}
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-3">Recent Leads</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {leads.slice(0, 5).map((lead) => (
-                    <div key={lead.id} className="bg-white/5 rounded-lg p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Icon
-                          name={getStatusIcon(lead.status)}
-                          className={`w-4 h-4 ${lead.status === 'new' ? 'text-blue-400' : lead.status === 'qualified' ? 'text-purple-400' : 'text-gray-400'}`}
-                        />
-                        <div>
-                          <div className="text-white font-medium">{lead.visitorName}</div>
-                          <div className="text-gray-400 text-sm">{lead.visitorCompany}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-gray-300 text-sm">{formatTime(lead.timestamp)}</div>
-                        <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
-                          {lead.leadScore}%
-                        </div>
+            {/* Recent Leads */}
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+              <h2 className="text-xl font-bold text-white mb-4">Recent Leads</h2>
+              <div className="space-y-3">
+                {leads.slice(0, 5).map((lead) => (
+                  <div key={lead.id} className="bg-white/5 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        name={getStatusIcon(lead.status)}
+                        className={`w-5 h-5 ${lead.status === 'new' ? 'text-blue-400' : lead.status === 'qualified' ? 'text-purple-400' : 'text-gray-400'}`}
+                      />
+                      <div>
+                        <div className="text-white font-medium">{lead.visitorName}</div>
+                        <div className="text-gray-400 text-sm">{lead.visitorCompany}</div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="text-right">
+                      <div className="text-gray-300 text-sm">{formatTime(lead.timestamp)}</div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(lead.status)}`}>
+                        {lead.leadScore}%
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {leads.length === 0 && (
+                  <div className="text-center py-8 text-gray-400">
+                    <Icon name="camera" className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No leads captured yet. Start scanning to see leads here!</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -829,7 +879,344 @@ export default function ExhibitorLeadCapture() {
             </div>
           </div>
         )}
+
+        {/* Profile View */}
+        {currentView === 'profile' && (
+          <div className="space-y-6">
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white">Exhibitor Profile</h2>
+                <button
+                  onClick={() => setIsEditingProfile(!isEditingProfile)}
+                  className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+                    isEditingProfile
+                      ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  <Icon name={isEditingProfile ? 'save' : 'edit'} className="w-4 h-4 mr-2" />
+                  {isEditingProfile ? 'Save Profile' : 'Edit Profile'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Profile Picture and Basic Info */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
+                      {exhibitorInfo?.logoUrl ? (
+                        <img
+                          src={exhibitorInfo.logoUrl}
+                          alt="Logo"
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <Icon name="building" className="w-8 h-8 text-white" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">
+                        {exhibitorInfo?.fullName || 'Exhibitor Name'}
+                      </h3>
+                      <p className="text-gray-300">{exhibitorInfo?.company || 'Company Name'}</p>
+                      <p className="text-gray-300">{exhibitorInfo?.position || 'Position'}</p>
+                    </div>
+                  </div>
+
+                  {/* Logo URL Input (when editing) */}
+                  {isEditingProfile && (
+                    <div>
+                      <label className="block text-gray-300 font-medium mb-2">Logo URL</label>
+                      <input
+                        type="url"
+                        value={profileForm.logoUrl}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, logoUrl: e.target.value }))}
+                        placeholder="https://example.com/logo.png"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Contact Information */}
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-300 font-medium mb-2">Full Name</label>
+                      {isEditingProfile ? (
+                        <input
+                          type="text"
+                          value={profileForm.fullName}
+                          onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, fullName: e.target.value }))}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-white">{exhibitorInfo?.fullName || 'Not provided'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-gray-300 font-medium mb-2">Position</label>
+                      {isEditingProfile ? (
+                        <input
+                          type="text"
+                          value={profileForm.position}
+                          onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, position: e.target.value }))}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-white">{exhibitorInfo?.position || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-300 font-medium mb-2">Company</label>
+                    {isEditingProfile ? (
+                      <input
+                        type="text"
+                        value={profileForm.company}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, company: e.target.value }))}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <p className="text-white">{exhibitorInfo?.company || 'Not provided'}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-300 font-medium mb-2">Email</label>
+                      {isEditingProfile ? (
+                        <input
+                          type="email"
+                          value={profileForm.contactEmail}
+                          onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, contactEmail: e.target.value }))}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-white">{exhibitorInfo?.contactEmail || 'Not provided'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-gray-300 font-medium mb-2">Phone</label>
+                      {isEditingProfile ? (
+                        <input
+                          type="tel"
+                          value={profileForm.contactPhone}
+                          onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, contactPhone: e.target.value }))}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      ) : (
+                        <p className="text-white">{exhibitorInfo?.contactPhone || 'Not provided'}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-300 font-medium mb-2">Website</label>
+                    {isEditingProfile ? (
+                      <input
+                        type="url"
+                        value={profileForm.website}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, website: e.target.value }))}
+                        placeholder="https://example.com"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <p className="text-white">{exhibitorInfo?.website ? (
+                        <a href={exhibitorInfo.website} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                          {exhibitorInfo.website}
+                        </a>
+                      ) : 'Not provided'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="mt-8 pt-6 border-t border-white/20">
+                <h3 className="text-lg font-semibold text-white mb-4">Additional Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-gray-300 font-medium mb-2">Industry</label>
+                    {isEditingProfile ? (
+                      <input
+                        type="text"
+                        value={profileForm.industry}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, industry: e.target.value }))}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <p className="text-white">{exhibitorInfo?.industry || 'Not provided'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 font-medium mb-2">Company Size</label>
+                    {isEditingProfile ? (
+                      <select
+                        value={profileForm.companySize}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, companySize: e.target.value }))}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select size</option>
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="500+">500+ employees</option>
+                      </select>
+                    ) : (
+                      <p className="text-white">{exhibitorInfo?.companySize || 'Not provided'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 font-medium mb-2">Booth ID</label>
+                    {isEditingProfile ? (
+                      <input
+                        type="text"
+                        value={profileForm.boothId}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, boothId: e.target.value }))}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <p className="text-white">{exhibitorInfo?.boothId || 'Not provided'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 font-medium mb-2">Address</label>
+                    {isEditingProfile ? (
+                      <input
+                        type="text"
+                        value={profileForm.address}
+                        onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, address: e.target.value }))}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <p className="text-white">{exhibitorInfo?.address || 'Not provided'}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <label className="block text-gray-300 font-medium mb-2">Bio / Description</label>
+                  {isEditingProfile ? (
+                    <textarea
+                      value={profileForm.bio}
+                      onChange={(e) => setProfileForm((prev: typeof profileForm) => ({ ...prev, bio: e.target.value }))}
+                      placeholder="Tell visitors about your company and what makes you unique..."
+                      rows={4}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    />
+                  ) : (
+                    <p className="text-white">{exhibitorInfo?.bio || 'No description provided'}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Save/Cancel buttons for editing */}
+              {isEditingProfile && (
+                <div className="mt-6 pt-6 border-t border-white/20 flex gap-3">
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={profileLoading}
+                    className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Icon name="save" className="w-5 h-5" />
+                    {profileLoading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingProfile(false);
+                      // Reset form to current exhibitor info
+                      if (exhibitorInfo) {
+                        setProfileForm({
+                          fullName: exhibitorInfo.fullName || '',
+                          position: exhibitorInfo.position || '',
+                          company: exhibitorInfo.company || '',
+                          contactEmail: exhibitorInfo.contactEmail || '',
+                          contactPhone: exhibitorInfo.contactPhone || '',
+                          website: exhibitorInfo.website || '',
+                          address: exhibitorInfo.address || '',
+                          industry: exhibitorInfo.industry || '',
+                          companySize: exhibitorInfo.companySize || '',
+                          boothId: exhibitorInfo.boothId || '',
+                          bio: exhibitorInfo.bio || '',
+                          logoUrl: exhibitorInfo.logoUrl || ''
+                        });
+                      }
+                    }}
+                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* QR Scanner Modal */}
+      {showScannerModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-auto overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">Lead Capture Scanner</h2>
+                <button
+                  onClick={() => setShowScannerModal(false)}
+                  className="text-white/70 hover:text-white"
+                >
+                  <Icon name="timesCircle" className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="text-blue-100 mt-2">Scan visitor QR codes to capture leads</p>
+            </div>
+
+            <div className="p-6">
+              <QRCodeScanner
+                userId={auth.currentUser?.uid || ''}
+                userCategory="Exhibitor"
+                mode="lead"
+                onScanResult={(result: QRScanResult) => {
+                  if (result.success) {
+                    setSuccess(result.message);
+                    setShowScannerModal(false);
+                    // Reload leads and stats after successful scan
+                    setTimeout(() => {
+                      loadLeads();
+                      loadExhibitorStats();
+                    }, 1000);
+                  } else {
+                    setError(result.error || 'Lead capture failed');
+                  }
+                }}
+              />
+
+              {loading && (
+                <div className="mt-4 text-center">
+                  <Icon name="spinner" className="w-8 h-8 animate-spin text-blue-400 mx-auto mb-2" />
+                  <p className="text-gray-600">Capturing lead...</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-4 bg-red-500/10 border border-red-500/20 text-red-600 p-4 rounded-lg flex items-center gap-2">
+                  <Icon name="exclamationTriangle" className="w-5 h-5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {success && (
+                <div className="mt-4 bg-green-500/10 border border-green-500/20 text-green-600 p-4 rounded-lg flex items-center gap-2">
+                  <Icon name="checkCircle" className="w-5 h-5" />
+                  <span>{success}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lead Management Modal */}
       {showLeadModal && selectedLead && (

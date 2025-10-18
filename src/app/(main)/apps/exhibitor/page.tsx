@@ -1160,7 +1160,17 @@ export default function ExhibitorLeadCapture() {
                       className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                     />
                   ) : (
-                    <p className="text-white">{exhibitorInfo?.bio || 'No description provided'}</p>
+                    <div className="space-y-2">
+                      {exhibitorInfo?.bio && (
+                        <p className="text-white">{exhibitorInfo.bio}</p>
+                      )}
+                      {exhibitorInfo?.companyDescription && exhibitorInfo?.companyDescription !== exhibitorInfo?.bio && (
+                        <p className="text-white">{exhibitorInfo.companyDescription}</p>
+                      )}
+                      {!exhibitorInfo?.bio && !exhibitorInfo?.companyDescription && (
+                        <p className="text-gray-400 italic">No description provided</p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

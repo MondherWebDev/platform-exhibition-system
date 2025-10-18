@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enhancedBadgeService } from '../../../../utils/enhancedBadgeService';
+import { createUserBadge, generateQRCodeData } from '../../../../utils/badgeService';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,14 +18,18 @@ export async function POST(req: NextRequest) {
     if (badgeType === 'visitor_ebadge') {
       console.log('🎫 Generating visitor e-badge for user:', userId);
       try {
-        // Generate visitor e-badge
-        badge = await enhancedBadgeService.generateVisitorEBadge(
+        // Generate visitor e-badge using the existing badge service
+        badge = await createUserBadge(
           userId,
-          eventId || 'default',
-          'visitor_ebadge',
-          createdBy || 'system'
+          {
+            name: badgeData?.name || 'Visitor',
+            role: badgeData?.role || 'Visitor',
+            company: badgeData?.company || '',
+            category: 'Visitor'
+          },
+          eventId || 'default'
         );
-        console.log('✅ Visitor e-badge generated successfully:', badge.id);
+        console.log('✅ Visitor e-badge generated successfully:', badge?.id);
       } catch (error) {
         console.error('❌ Error generating visitor e-badge:', error);
         return NextResponse.json(
@@ -36,14 +40,18 @@ export async function POST(req: NextRequest) {
     } else {
       console.log('🏷️ Generating regular badge for user:', userId);
       try {
-        // Create regular badge using the enhanced badge service
-        badge = await enhancedBadgeService.createBadge(
+        // Create regular badge using the existing badge service
+        badge = await createUserBadge(
           userId,
-          eventId || 'default',
-          'default',
-          createdBy || 'system'
+          {
+            name: badgeData?.name || 'User',
+            role: badgeData?.role || 'Attendee',
+            company: badgeData?.company || '',
+            category: badgeData?.category || 'Visitor'
+          },
+          eventId || 'default'
         );
-        console.log('✅ Regular badge generated successfully:', badge.id);
+        console.log('✅ Regular badge generated successfully:', badge?.id);
       } catch (error) {
         console.error('❌ Error generating regular badge:', error);
         return NextResponse.json(
@@ -51,6 +59,11 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
+    }
+
+    if (!badge) {
+      console.error('❌ Badge generation failed - no badge returned');
+      return NextResponse.json({ error: 'Badge generation failed' }, { status: 500 });
     }
 
     console.log('🎉 Badge generation completed successfully');

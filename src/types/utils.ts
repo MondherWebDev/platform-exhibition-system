@@ -36,7 +36,7 @@ import {
  * Convert Firestore Timestamp to JavaScript Date
  */
 export const timestampToDate = (timestamp: Timestamp | string | Date): Date => {
-  if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
+  if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && 'seconds' in timestamp) {
     return (timestamp as Timestamp).toDate();
   }
   if (timestamp instanceof Date) {
@@ -82,16 +82,24 @@ export const convertTimestampsToDates = <T extends Record<string, any>>(obj: T):
 };
 
 /**
+ * Type guard to check if a value is a Date object
+ */
+const isDate = (value: any): value is Date => {
+  return value && typeof value === 'object' && value.constructor === Date;
+};
+
+/**
  * Convert date fields in an object from Date to Timestamp
  */
 export const convertDatesToTimestamps = <T extends Record<string, any>>(obj: T): T => {
   const converted = { ...obj };
 
   for (const key in converted) {
-    if (converted[key] instanceof Date) {
-      converted[key] = Timestamp.fromDate(converted[key]) as any;
-    } else if (converted[key] && typeof converted[key] === 'object') {
-      converted[key] = convertDatesToTimestamps(converted[key]);
+    const value = converted[key];
+    if (isDate(value)) {
+      converted[key] = Timestamp.fromDate(value) as any;
+    } else if (value && typeof value === 'object') {
+      converted[key] = convertDatesToTimestamps(value);
     }
   }
 
@@ -105,7 +113,8 @@ export const convertDatesToTimestamps = <T extends Record<string, any>>(obj: T):
 /**
  * Type guard to check if a value is a valid UserRole
  */
-export const isValidUserRole = (value: string): value is UserRole => {
+export const isValidUserRole = (value: any): value is UserRole => {
+  if (typeof value !== 'string') return false;
   const validRoles: UserRole[] = [
     'Visitor', 'Exhibitor', 'Organizer', 'Media', 'Speaker',
     'VIP', 'Hosted Buyer', 'Agent', 'Sponsor', 'Administrator'

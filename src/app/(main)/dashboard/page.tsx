@@ -791,7 +791,7 @@ export default function CentralDashboard() {
       }
 
       // Footer
-      const totalPages = doc.getNumberOfPages();
+      const totalPages = doc.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);

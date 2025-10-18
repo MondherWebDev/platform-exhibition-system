@@ -29,6 +29,8 @@ export interface AuthState {
   initialized: boolean;
 }
 
+export type { UserProfile };
+
 class AuthService {
   private static instance: AuthService;
   private authState: AuthState = {
@@ -282,10 +284,10 @@ class AuthService {
       try {
         console.log('🎫 Creating badge for new user:', userCred.user.uid, 'Category:', userData.category);
         const badgeResult = await createUserBadge(userCred.user.uid, {
-          name: userData.fullName,
-          role: userData.position,
-          company: userData.company,
-          category: userData.category
+          name: userData.fullName || 'User',
+          role: userData.position || 'Attendee',
+          company: userData.company || '',
+          category: userData.category || 'Visitor'
         });
 
         if (badgeResult) {
@@ -389,10 +391,10 @@ class AuthService {
         try {
           console.log('🎫 Creating badge for new Google user:', user.uid);
           const badgeResult = await createUserBadge(user.uid, {
-            name: defaultProfile.fullName,
-            role: defaultProfile.position,
-            company: defaultProfile.company,
-            category: defaultProfile.category
+            name: defaultProfile.fullName || 'User',
+            role: defaultProfile.position || 'Attendee',
+            company: defaultProfile.company || '',
+            category: defaultProfile.category || 'Visitor'
           });
 
           if (badgeResult) {
@@ -414,10 +416,10 @@ class AuthService {
           try {
             console.log('🎫 Creating badge for existing Google user without badge:', user.uid);
             const badgeResult = await createUserBadge(user.uid, {
-              name: userData.fullName,
-              role: userData.position,
-              company: userData.company,
-              category: userData.category
+              name: userData.fullName || 'User',
+              role: userData.position || 'Attendee',
+              company: userData.company || '',
+              category: userData.category || 'Visitor'
             });
 
             if (badgeResult) {

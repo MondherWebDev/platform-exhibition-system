@@ -8,6 +8,7 @@ import GlassCard from './GlassCard';
 import { authService, UserProfile } from '../utils/authService';
 import { dataValidation, ValidationResult } from '../utils/dataValidation';
 import { createUserBadge } from '../utils/badgeService';
+import { UserRole, SponsorTier } from '../types/models';
 
 const categories = [
   'Organizer',
@@ -137,7 +138,7 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
         fullName,
         position,
         company,
-        category,
+        category: category as UserRole,
         contactEmail: contactEmail || email,
         contactPhone,
         website,
@@ -148,10 +149,10 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
         bio,
         linkedin,
         twitter,
-        interests,
+        interests: interests ? interests.split(',').map(i => i.trim()) : [],
         budget,
         boothId,
-        sponsorTier
+        sponsorTier: sponsorTier as SponsorTier
       };
 
       const result = await authService.signUp(email, password, profileData, organizerPasscode);

@@ -3,9 +3,10 @@
  * Handles automatic badge generation and storage for newly created accounts
  */
 
-import { doc, setDoc, collection, getDocs, query, where, getDoc, orderBy, limit, addDoc, updateDoc, serverTimestamp, QueryConstraint } from 'firebase/firestore';
+import { doc, setDoc, collection, getDocs, query, where, getDoc, orderBy, limit, addDoc, updateDoc, serverTimestamp, QueryConstraint, Timestamp } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { BadgeDoc, BadgeTemplate, BadgeCategory, BadgeStatus, UserRole } from '../types/models';
+import { BadgeData } from '../types/badge';
 import { timestampToDate, dateToTimestamp } from '../types/utils';
 
 /**
@@ -80,15 +81,17 @@ export const createUserBadge = async (
     // Generate badge image URL
     const badgeUrl = generateBadgeImageData({
       id: `badge_${userId}_${Date.now()}`,
-      userId,
+      uid: userId,
+      eventId: eventId || 'default',
       name: userData.name,
       role: userData.role,
       company: userData.company,
       category: userData.category as BadgeCategory,
       qrCode: '',
       status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      createdAt: serverTimestamp() as any,
+      updatedAt: serverTimestamp() as any,
+      createdBy: 'system'
     });
 
     // Create badge data
@@ -105,7 +108,7 @@ export const createUserBadge = async (
       status: 'pending',
       createdAt: serverTimestamp() as any,
       updatedAt: serverTimestamp() as any,
-      createdBy: userId
+      createdBy: 'system'
     };
 
     // Store badge in Firestore
@@ -115,7 +118,7 @@ export const createUserBadge = async (
     await setDoc(doc(db, 'Users', userId), {
       badgeId: badgeData.id,
       badgeCreated: true,
-      badgeCreatedAt: new Date()
+      badgeCreatedAt: serverTimestamp() as any
     }, { merge: true });
 
     console.log('✅ Badge created successfully:', badgeData.id);
@@ -130,7 +133,7 @@ export const createUserBadge = async (
 /**
  * Get badge for a user
  */
-export const getUserBadge = async (userId: string): Promise<BadgeData | null> => {
+export const getUserBadge = async (userId: string): Promise<BadgeDoc | null> => {
   try {
     // First check if user has a badge reference
     const userDoc = await import('firebase/firestore').then(({ doc, getDoc }) =>
@@ -146,7 +149,7 @@ export const getUserBadge = async (userId: string): Promise<BadgeData | null> =>
         );
 
         if (badgeDoc.exists()) {
-          return { id: badgeDoc.id, ...badgeDoc.data() } as BadgeData;
+          return { id: badgeDoc.id, ...badgeDoc.data() } as BadgeDoc;
         }
       }
     }
@@ -161,7 +164,7 @@ export const getUserBadge = async (userId: string): Promise<BadgeData | null> =>
 /**
  * Get all badges for an event
  */
-export const getEventBadges = async (eventId: string = 'default'): Promise<BadgeData[]> => {
+export const getEventBadges = async (eventId: string = 'default'): Promise<BadgeDoc[]> => {
   try {
     const badgesQuery = query(
       collection(db, 'Badges'),
@@ -172,7 +175,7 @@ export const getEventBadges = async (eventId: string = 'default'): Promise<Badge
     const badges: BadgeDoc[] = [];
 
     badgesSnapshot.forEach((doc) => {
-    badges.push({ id: doc.id, ...doc.data() } as BadgeDoc);
+      badges.push({ id: doc.id, ...doc.data() } as BadgeDoc);
     });
 
     return badges;
@@ -185,7 +188,7 @@ export const getEventBadges = async (eventId: string = 'default'): Promise<Badge
 /**
  * Update badge information
  */
-export const updateBadge = async (badgeId: string, updates: Partial<BadgeData>): Promise<boolean> => {
+export const updateBadge = async (badgeId: string, updates: Partial<BadgeDoc>): Promise<boolean> => {
   try {
     await setDoc(doc(db, 'Badges', badgeId), updates, { merge: true });
     console.log('✅ Badge updated successfully:', badgeId);
@@ -222,11 +225,11 @@ export const updateBadgeStatus = async (userId: string, status: 'printed' | 'pen
     // Update the badge status
     const updates: any = {
       status: status,
-      updatedAt: new Date()
+      updatedAt: serverTimestamp() as any
     };
 
     if (status === 'printed') {
-      updates.printedAt = new Date();
+      updates.printedAt = serverTimestamp() as any;
     }
 
     await setDoc(doc(db, 'Badges', badgeId), updates, { merge: true });
@@ -235,7 +238,7 @@ export const updateBadgeStatus = async (userId: string, status: 'printed' | 'pen
     await setDoc(doc(db, 'Users', userId), {
       badgePrinted: status === 'printed',
       badgeStatus: status,
-      badgeUpdatedAt: new Date()
+      badgeUpdatedAt: serverTimestamp() as any
     }, { merge: true });
 
     console.log('✅ Badge status updated successfully:', badgeId, status);
@@ -260,7 +263,7 @@ export const deleteBadge = async (badgeId: string): Promise<boolean> => {
       const badgeData = badgeDoc.data() as BadgeData;
 
       // Remove badge reference from user
-      await setDoc(doc(db, 'Users', badgeData.userId), {
+      await setDoc(doc(db, 'Users', badgeData.uid), {
         badgeId: null,
         badgeCreated: false
       }, { merge: true });
@@ -285,7 +288,7 @@ export const deleteBadge = async (badgeId: string): Promise<boolean> => {
 export const duplicateBadge = async (
   badgeId: string,
   newUserId: string,
-  updates?: Partial<BadgeData>
+  updates?: Partial<BadgeDoc>
 ): Promise<BadgeDoc | null> => {
   try {
     // Get original badge data
@@ -302,8 +305,9 @@ export const duplicateBadge = async (
     const duplicatedBadge: BadgeDoc = {
       ...originalBadge,
       id: `badge_${newUserId}_${Date.now()}`,
-      userId: newUserId,
-      createdAt: new Date(),
+      uid: newUserId,
+      createdAt: serverTimestamp() as any,
+      updatedAt: serverTimestamp() as any,
       status: 'pending', // Reset status for new badge
       ...updates
     };
@@ -314,14 +318,15 @@ export const duplicateBadge = async (
     // Store duplicated badge
     await setDoc(doc(db, 'Badges', duplicatedBadge.id), {
       ...duplicatedBadge,
-      createdAt: new Date()
+      createdAt: serverTimestamp() as any,
+      updatedAt: serverTimestamp() as any
     });
 
     // Update user document with new badge reference
     await setDoc(doc(db, 'Users', newUserId), {
       badgeId: duplicatedBadge.id,
       badgeCreated: true,
-      badgeCreatedAt: new Date()
+      badgeCreatedAt: serverTimestamp() as any
     }, { merge: true });
 
     console.log('✅ Badge duplicated successfully:', duplicatedBadge.id);
@@ -359,7 +364,8 @@ export const getBadgeAnalytics = async (eventId: string = 'default') => {
         (analytics.categoryBreakdown[badge.category] || 0) + 1;
 
       // Creation trends by date
-      const dateKey = badge.createdAt.toISOString().split('T')[0];
+      const createdAtDate = timestampToDate(badge.createdAt);
+      const dateKey = createdAtDate.toISOString().split('T')[0];
       analytics.creationTrends[dateKey] = (analytics.creationTrends[dateKey] || 0) + 1;
     });
 
@@ -383,7 +389,11 @@ export const getBadgeAnalytics = async (eventId: string = 'default') => {
 
     // Recent activity (last 10 badges)
     analytics.recentActivity = badges
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort((a, b) => {
+        const aTime = timestampToDate(a.createdAt).getTime();
+        const bTime = timestampToDate(b.createdAt).getTime();
+        return bTime - aTime;
+      })
       .slice(0, 10);
 
     return analytics;
@@ -455,8 +465,8 @@ const exportBadgesToCSV = (badges: BadgeData[]): string => {
     badge.phone || '',
     badge.status || 'pending',
     badge.template || 'default',
-    badge.createdAt.toISOString(),
-    badge.printedAt?.toISOString() || '',
+    badge.createdAt ? timestampToDate(badge.createdAt).toISOString() : '',
+    badge.printedAt ? timestampToDate(badge.printedAt).toISOString() : '',
     badge.eventId
   ]);
 
@@ -538,7 +548,7 @@ const exportBadgesToPDF = async (badges: BadgeData[]): Promise<string> => {
     yPosition += 4;
     doc.text(`Status: ${badge.status || 'pending'}`, 25, yPosition);
     yPosition += 4;
-    doc.text(`Created: ${badge.createdAt.toLocaleDateString()}`, 25, yPosition);
+    doc.text(`Created: ${badge.createdAt ? timestampToDate(badge.createdAt).toLocaleDateString() : 'Unknown'}`, 25, yPosition);
     yPosition += 10;
   });
 
@@ -634,8 +644,8 @@ export const badgeTemplates: BadgeTemplate[] = [
     includePhoto: false,
     preview: '/badge-templates/modern.png',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: serverTimestamp() as any,
+    updatedAt: serverTimestamp() as any
   },
   {
     id: 'classic',
@@ -655,8 +665,8 @@ export const badgeTemplates: BadgeTemplate[] = [
     includePhoto: false,
     preview: '/badge-templates/classic.png',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: serverTimestamp() as any,
+    updatedAt: serverTimestamp() as any
   },
   {
     id: 'minimal',
@@ -676,8 +686,8 @@ export const badgeTemplates: BadgeTemplate[] = [
     includePhoto: false,
     preview: '/badge-templates/minimal.png',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: serverTimestamp() as any,
+    updatedAt: serverTimestamp() as any
   },
   {
     id: 'corporate',
@@ -697,8 +707,8 @@ export const badgeTemplates: BadgeTemplate[] = [
     includePhoto: false,
     preview: '/badge-templates/corporate.png',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
+    createdAt: serverTimestamp() as any,
+    updatedAt: serverTimestamp() as any
   }
 ];
 
@@ -937,6 +947,7 @@ const generateBadgePDF = async (
     'Media': [234, 179, 8],
     'Hosted Buyer': [79, 70, 229],
     'Agent': [107, 114, 128],
+    'Sponsor': [139, 69, 19],
   };
 
   const categoryColor = categoryColors[badgeData.category] || [59, 130, 246];
@@ -1043,12 +1054,12 @@ export const bulkUpdateBadgeStatus = async (
       const badgeRef = doc(db, 'Badges', badgeId);
       const updates: any = {
         status: status,
-        updatedAt: new Date(),
+        updatedAt: serverTimestamp() as any,
         updatedBy: userId
       };
 
       if (status === 'printed') {
-        updates.printedAt = new Date();
+        updates.printedAt = serverTimestamp() as any;
       }
 
       await setDoc(badgeRef, updates, { merge: true });
@@ -1057,10 +1068,10 @@ export const bulkUpdateBadgeStatus = async (
       const badgeDoc = await getDoc(badgeRef);
       if (badgeDoc.exists()) {
         const badgeData = badgeDoc.data() as BadgeData;
-        await setDoc(doc(db, 'Users', badgeData.userId), {
+        await setDoc(doc(db, 'Users', badgeData.uid), {
           badgePrinted: status === 'printed',
           badgeStatus: status,
-          badgeUpdatedAt: new Date()
+          badgeUpdatedAt: serverTimestamp() as any
         }, { merge: true });
       }
     });
@@ -1804,7 +1815,7 @@ const updateUserAnalytics = async (
     const userRef = doc(db, 'Users', userId);
     await setDoc(userRef, {
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: serverTimestamp() as any
     }, { merge: true });
   } catch (error) {
     console.error('❌ Error updating user analytics:', error);
@@ -1821,14 +1832,13 @@ const updateVisitorAnalytics = async (
 ): Promise<void> => {
   try {
     const analyticsRef = doc(db, 'VisitorAnalytics', visitorId);
-    const timestamp = new Date().toISOString();
 
     await setDoc(analyticsRef, {
       visitorId,
-      lastActivity: timestamp,
+      lastActivity: serverTimestamp() as any,
       totalLeadsCaptured: 1,
       exhibitorInteractions: [exhibitorId],
-      updatedAt: timestamp
+      updatedAt: serverTimestamp() as any
     }, { merge: true });
   } catch (error) {
     console.error('❌ Error updating visitor analytics:', error);

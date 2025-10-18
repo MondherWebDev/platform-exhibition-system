@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, addDoc, serverTimestamp, doc, setDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, setDoc, query, where, getDocs, getDoc } from "firebase/firestore";
 import { auth, db } from "../../../firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { createUserBadge } from "../../../utils/badgeService";
@@ -160,6 +160,28 @@ export default function Registration() {
 
       // Save user profile to Firestore
       await setDoc(doc(db, 'Users', firebaseUser.uid), userData);
+
+      // Also add to event-specific collection if an event is active
+      const globalSettings = await getDoc(doc(db, 'AppSettings', 'global'));
+      if (globalSettings.exists()) {
+        const settings = globalSettings.data() as any;
+        if (settings.eventId && settings.eventId !== 'default') {
+          // Add to event-specific collection based on category
+          if (formData.category === 'Exhibitor') {
+            await setDoc(doc(db, 'Events', settings.eventId, 'Exhibitors', firebaseUser.uid), {
+              ...userData,
+              eventId: settings.eventId,
+              addedAt: new Date().toISOString()
+            });
+          } else if (formData.category === 'Hosted Buyer') {
+            await setDoc(doc(db, 'Events', settings.eventId, 'HostedBuyers', firebaseUser.uid), {
+              ...userData,
+              eventId: settings.eventId,
+              addedAt: new Date().toISOString()
+            });
+          }
+        }
+      }
 
       // Create badge for the new user
       try {

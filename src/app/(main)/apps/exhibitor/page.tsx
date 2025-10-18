@@ -152,7 +152,7 @@ export default function ExhibitorLeadCapture() {
             industry: data.industry || '',
             companySize: data.companySize || '',
             boothId: data.boothId || '',
-            bio: data.bio || '',
+            bio: data.bio || data.companyDescription || '',
             logoUrl: data.logoUrl || ''
           });
         }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enhancedBadgeService } from '../../../../utils/enhancedBadgeService';
+import { getUserBadge, deleteBadge } from '../../../../utils/badgeService';
 
 export async function GET(
   req: NextRequest,
@@ -12,8 +12,8 @@ export async function GET(
       return NextResponse.json({ error: 'Badge ID is required' }, { status: 400 });
     }
 
-    // Get badge data
-    const badge = await enhancedBadgeService.getBadge(badgeId);
+    // Get badge data using the correct function name
+    const badge = await getUserBadge(badgeId);
 
     if (!badge) {
       return NextResponse.json({ error: 'Badge not found' }, { status: 404 });
@@ -50,8 +50,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Deleted by is required' }, { status: 400 });
     }
 
-    // Delete badge using enhanced service
-    const success = await enhancedBadgeService.deleteBadge(badgeId, deletedBy);
+    // Delete badge using the correct function name
+    const success = await deleteBadge(badgeId);
 
     if (!success) {
       return NextResponse.json({ error: 'Failed to delete badge' }, { status: 500 });

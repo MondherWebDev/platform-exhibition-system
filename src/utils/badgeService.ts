@@ -867,7 +867,7 @@ const drawBadgeTemplate = async (
 /**
  * Generate clean PDF badge
  */
-const generateBadgePDF = async (
+export const generateBadgePDF = async (
   badgeData: BadgeData,
   template: BadgeTemplate,
   options: { includeQR?: boolean; includePhoto?: boolean }

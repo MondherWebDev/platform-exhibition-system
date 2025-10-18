@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enhancedBadgeService } from '../../../../../utils/enhancedBadgeService';
+import { getUserBadge, generateBadgePDF, badgeTemplates } from '../../../../../utils/badgeService';
 
 export async function GET(
   req: NextRequest,
@@ -12,17 +12,18 @@ export async function GET(
       return NextResponse.json({ error: 'Badge ID is required' }, { status: 400 });
     }
 
-    // Get badge data
-    const badge = await enhancedBadgeService.getBadge(badgeId);
+    // Get badge data using the correct function name
+    const badge = await getUserBadge(badgeId);
 
     if (!badge) {
       return NextResponse.json({ error: 'Badge not found' }, { status: 404 });
     }
 
-    // Generate PDF
-    const pdfDataUrl = await enhancedBadgeService.generateBadgePDF(
+    // Generate PDF using the correct function name with proper arguments
+    const pdfDataUrl = await generateBadgePDF(
       badge,
-      { includeQR: true, includePhoto: false } as any // Using default template
+      badgeTemplates[0], // Use the first (default) template
+      { includeQR: true, includePhoto: false }
     );
 
     // Convert data URL to buffer

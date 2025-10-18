@@ -185,6 +185,64 @@ export default function CentralDashboard() {
   const [checkIns, setCheckIns] = React.useState<any[]>([]);
   const [printJobs, setPrintJobs] = React.useState<any[]>([]);
 
+  // User management state
+  const [showUserModal, setShowUserModal] = React.useState(false);
+  const [selectedUser, setSelectedUser] = React.useState<any>(null);
+  const [userActionLoading, setUserActionLoading] = React.useState(false);
+  const [userSearchQuery, setUserSearchQuery] = React.useState('');
+  const [userCategoryFilter, setUserCategoryFilter] = React.useState('All');
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [userToDelete, setUserToDelete] = React.useState<any>(null);
+  const [deleteLoading, setDeleteLoading] = React.useState(false);
+
+  // User deletion functions
+  const handleDeleteUser = (user: any) => {
+    setUserToDelete(user);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      const response = await fetch(`/api/users?userId=${userToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('User deleted successfully:', result);
+
+        // The real-time listeners will automatically update the state
+        // when the user is deleted from the database
+        // No need to manually filter here as onSnapshot will handle it
+
+        // Close modal and reset state
+        setShowDeleteConfirm(false);
+        setUserToDelete(null);
+
+        // Show success message
+        alert(`User "${userToDelete.fullName || userToDelete.email}" has been successfully deleted along with all associated data.`);
+
+      } else {
+        const error = await response.json();
+        console.error('Delete failed:', error);
+        alert(`Delete failed: ${error.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error deleting user. Please try again.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const cancelDeleteUser = () => {
+    setShowDeleteConfirm(false);
+    setUserToDelete(null);
+  };
+
   // Enhanced attendee tracking state
   const [dailyStats, setDailyStats] = React.useState<any[]>([]);
   const [currentDayStats, setCurrentDayStats] = React.useState<any>({
@@ -1316,6 +1374,85 @@ export default function CentralDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && userToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gray-800 rounded-xl border border-gray-600 p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <FontAwesomeIcon icon={faTrash} className="text-red-400 text-lg" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Delete User Account</h3>
+                <p className="text-gray-400 text-sm">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 text-red-400 mb-2">
+                <FontAwesomeIcon icon={faTimesCircle} className="w-4 h-4" />
+                <span className="font-medium">User to be deleted:</span>
+              </div>
+              <div className="text-white">
+                <p className="font-medium">{userToDelete.fullName || 'Unknown User'}</p>
+                <p className="text-sm text-gray-300">{userToDelete.email}</p>
+                <p className="text-sm text-gray-400">{userToDelete.company || 'No company'}</p>
+                <p className="text-sm">
+                  <span className={`px-2 py-1 rounded-full text-xs ${
+                    userToDelete.category === 'Visitor' ? 'bg-blue-500/20 text-blue-300' :
+                    userToDelete.category === 'Exhibitor' ? 'bg-purple-500/20 text-purple-300' :
+                    userToDelete.category === 'Hosted Buyer' ? 'bg-yellow-500/20 text-yellow-300' :
+                    'bg-gray-500/20 text-gray-300'
+                  }`}>
+                    {userToDelete.category || 'Unknown'}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 text-yellow-400 mb-2">
+                <FontAwesomeIcon icon={faInfoCircle} className="w-4 h-4" />
+                <span className="font-medium">What will be deleted:</span>
+              </div>
+              <ul className="text-sm text-gray-300 space-y-1">
+                <li>• User account and profile data</li>
+                <li>• Event-specific registrations (Exhibitor, VIP Buyer, etc.)</li>
+                <li>• Associated leads and check-in records</li>
+                <li>• Matchmaking recommendations</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelDeleteUser}
+                disabled={deleteLoading}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                disabled={deleteLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleteLoading ? (
+                  <>
+                    <FontAwesomeIcon icon={faSpinner} className="w-4 h-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
+                    Delete User
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

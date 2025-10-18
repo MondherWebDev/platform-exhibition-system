@@ -556,30 +556,7 @@ export default function ExhibitorLeadCapture() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              {exhibitorInfo?.logoUrl ? (
-                <img
-                  src={exhibitorInfo.logoUrl}
-                  alt="Company Logo"
-                  className="w-12 h-8 object-contain bg-white/10 rounded-lg p-1"
-                />
-              ) : (
-                <div className="w-12 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                  <Icon name="building" className="w-6 h-6 text-white" />
-                </div>
-              )}
-              <div className="text-left">
-                <p className="text-white font-medium">{exhibitorInfo?.company || 'Company'}</p>
-              </div>
-            </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowCompanyModal(true)}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 flex items-center gap-2"
-              >
-                <Icon name="building" className="w-4 h-4" />
-                Company
-              </button>
               <button
                 onClick={handleLogout}
                 className="text-red-300 hover:text-red-400 transition-colors"

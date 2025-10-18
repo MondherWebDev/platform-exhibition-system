@@ -156,13 +156,14 @@ export default function ExhibitorLeadCapture() {
             logoUrl: data.logoUrl || ''
           });
 
-          console.log('Loaded exhibitor data:', {
+          console.log('🔍 Loaded exhibitor data:', {
             fullName: data.fullName,
             company: data.company,
             bio: data.bio,
             companyDescription: data.companyDescription,
             logoUrl: data.logoUrl,
-            boothId: data.boothId
+            boothId: data.boothId,
+            uid: data.uid
           });
         }
       }

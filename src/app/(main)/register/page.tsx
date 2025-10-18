@@ -165,32 +165,47 @@ export default function Registration() {
       const globalSettings = await getDoc(doc(db, 'AppSettings', 'global'));
       if (globalSettings.exists()) {
         const settings = globalSettings.data() as any;
-        console.log('Global settings:', settings);
+        console.log('🔍 Global settings:', settings);
+        console.log('🔍 Current eventId:', settings.eventId);
 
         if (settings.eventId && settings.eventId !== 'default' && settings.eventId !== '') {
-          console.log('Adding user to event-specific collection:', settings.eventId);
+          console.log('✅ Adding user to event-specific collection:', settings.eventId);
 
-          // Add to event-specific collection based on category
-          if (formData.category === 'Exhibitor') {
-            await setDoc(doc(db, 'Events', settings.eventId, 'Exhibitors', firebaseUser.uid), {
-              ...userData,
-              eventId: settings.eventId,
-              addedAt: new Date().toISOString(),
-              boothId: userData.boothId || '',
-              companyDescription: formData.companyDescription || '',
-              logoUrl: userData.logoUrl || ''
-            });
-            console.log('✅ Added exhibitor to event collection');
-          } else if (formData.category === 'Hosted Buyer') {
-            await setDoc(doc(db, 'Events', settings.eventId, 'HostedBuyers', firebaseUser.uid), {
-              ...userData,
-              eventId: settings.eventId,
-              addedAt: new Date().toISOString()
-            });
-            console.log('✅ Added hosted buyer to event collection');
+          try {
+            // Add to event-specific collection based on category
+            if (formData.category === 'Exhibitor') {
+              const exhibitorData = {
+                ...userData,
+                eventId: settings.eventId,
+                addedAt: new Date().toISOString(),
+                boothId: userData.boothId || '',
+                companyDescription: formData.companyDescription || '',
+                logoUrl: userData.logoUrl || '',
+                name: userData.fullName,
+                description: formData.companyDescription || '',
+                tags: []
+              };
+
+              await setDoc(doc(db, 'Events', settings.eventId, 'Exhibitors', firebaseUser.uid), exhibitorData);
+              console.log('✅ Successfully added exhibitor to event collection:', exhibitorData);
+            } else if (formData.category === 'Hosted Buyer') {
+              const buyerData = {
+                ...userData,
+                eventId: settings.eventId,
+                addedAt: new Date().toISOString(),
+                name: userData.fullName,
+                company: userData.company,
+                notes: ''
+              };
+
+              await setDoc(doc(db, 'Events', settings.eventId, 'HostedBuyers', firebaseUser.uid), buyerData);
+              console.log('✅ Successfully added hosted buyer to event collection');
+            }
+          } catch (eventError) {
+            console.error('❌ Error adding user to event collection:', eventError);
           }
         } else {
-          console.log('❌ No valid eventId found in global settings');
+          console.log('❌ No valid eventId found in global settings - eventId:', settings.eventId);
         }
       } else {
         console.log('❌ No global settings found');

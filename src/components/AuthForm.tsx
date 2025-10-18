@@ -119,10 +119,8 @@ export default function AuthForm({ redirectPath, initialEmail }: AuthFormProps) 
         });
 
         // Use Next.js router for client-side navigation to prevent page reload
-        // Add a small delay to ensure the auth state is fully updated
-        setTimeout(() => {
-          router.push(targetPath);
-        }, 100);
+        console.log('🔄 About to redirect to:', targetPath);
+        router.push(targetPath);
       }
     });
 

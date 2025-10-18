@@ -213,8 +213,9 @@ export default function Registration() {
                 addedAt: new Date().toISOString(),
                 boothId: userData.boothId || '',
                 companyDescription: formData.companyDescription || '',
-                logoUrl: logoUrl || userData.logoUrl || '',
+                logoUrl: logoUrl || '',
                 name: userData.fullName,
+                company: userData.company,
                 description: formData.companyDescription || '',
                 tags: []
               };

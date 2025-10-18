@@ -104,6 +104,9 @@ export default function ExhibitorLeadCapture() {
   // Profile editing state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
+
+  // Company showcase modal state
+  const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [profileForm, setProfileForm] = useState({
     fullName: '',
     position: '',
@@ -569,6 +572,13 @@ export default function ExhibitorLeadCapture() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowCompanyModal(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 flex items-center gap-2"
+              >
+                <Icon name="building" className="w-4 h-4" />
+                Company
+              </button>
               <button
                 onClick={handleLogout}
                 className="text-red-300 hover:text-red-400 transition-colors"
@@ -1279,10 +1289,30 @@ export default function ExhibitorLeadCapture() {
             <div className="p-6">
               {/* Lead Info */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">{selectedLead.visitorName}</h3>
-                <p className="text-gray-600">{selectedLead.visitorPosition}</p>
-                <p className="text-gray-600">{selectedLead.visitorCompany}</p>
-                <p className="text-gray-600">{selectedLead.visitorEmail}</p>
+                <div className="flex items-center gap-3 mb-4">
+                  {exhibitorInfo?.logoUrl ? (
+                    <img
+                      src={exhibitorInfo.logoUrl}
+                      alt="Company Logo"
+                      className="w-10 h-6 object-contain bg-gray-100 rounded p-1"
+                    />
+                  ) : (
+                    <div className="w-10 h-6 bg-gray-200 rounded flex items-center justify-center">
+                      <Icon name="building" className="w-4 h-4 text-gray-600" />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">{exhibitorInfo?.company || 'Company'}</h3>
+                    <p className="text-sm text-gray-600">{exhibitorInfo?.fullName || 'Exhibitor'}</p>
+                  </div>
+                </div>
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-800 mb-2">Visitor Information:</h4>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{selectedLead.visitorName}</h3>
+                  <p className="text-gray-600">{selectedLead.visitorPosition}</p>
+                  <p className="text-gray-600">{selectedLead.visitorCompany}</p>
+                  <p className="text-gray-600">{selectedLead.visitorEmail}</p>
+                </div>
               </div>
 
               {/* Status Update */}
@@ -1336,6 +1366,115 @@ export default function ExhibitorLeadCapture() {
                   className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Company Showcase Modal */}
+      {showCompanyModal && exhibitorInfo && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-8 text-white relative">
+              <div className="text-center">
+                {/* Large Company Logo */}
+                <div className="mb-6 flex justify-center">
+                  {exhibitorInfo.logoUrl ? (
+                    <img
+                      src={exhibitorInfo.logoUrl}
+                      alt={`${exhibitorInfo.company} Logo`}
+                      className="w-32 h-20 object-contain bg-white/10 rounded-xl p-3"
+                    />
+                  ) : (
+                    <div className="w-32 h-20 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Icon name="building" className="w-16 h-16 text-white" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Prominent Company Name */}
+                <h1 className="text-3xl font-bold mb-2">
+                  {exhibitorInfo.company || 'Company Name'}
+                </h1>
+
+                {/* Secondary Exhibitor Info */}
+                <div className="space-y-1 text-purple-100">
+                  <p className="text-xl font-medium">
+                    {exhibitorInfo.fullName || 'Exhibitor Name'}
+                  </p>
+                  <p className="text-lg opacity-90">
+                    {exhibitorInfo.position || 'Position'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowCompanyModal(false)}
+                className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+              >
+                <Icon name="timesCircle" className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 bg-gray-50">
+              {/* Company Details */}
+              <div className="space-y-4">
+                {exhibitorInfo.bio && (
+                  <div>
+                    <h3 className="font-semibold text-gray-800 mb-2">About</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed">
+                      {exhibitorInfo.bio}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 pt-4 border-t border-gray-200">
+                  {exhibitorInfo.contactEmail && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Icon name="user" className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">{exhibitorInfo.contactEmail}</span>
+                    </div>
+                  )}
+
+                  {exhibitorInfo.contactPhone && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Icon name="phone" className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">{exhibitorInfo.contactPhone}</span>
+                    </div>
+                  )}
+
+                  {exhibitorInfo.website && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Icon name="globe" className="w-4 h-4 text-gray-400" />
+                      <a
+                        href={exhibitorInfo.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        {exhibitorInfo.website}
+                      </a>
+                    </div>
+                  )}
+
+                  {exhibitorInfo.boothId && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <Icon name="mapPin" className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-600">Booth: {exhibitorInfo.boothId}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Close Button */}
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowCompanyModal(false)}
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

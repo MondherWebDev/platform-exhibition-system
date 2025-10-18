@@ -439,11 +439,13 @@ export default function EventPublicPage() {
                       <img src={x.logoUrl} alt={x.company || x.name} className="mx-auto h-24 sm:h-28 object-contain" />
                     ) : (
                       <div className="mx-auto h-24 sm:h-28 w-full bg-white/5 rounded flex items-center justify-center">
-                        <span className="text-white/60 text-sm">No Logo</span>
+                        <svg className="w-12 h-12 text-white/30" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                        </svg>
                       </div>
                     )}
                   </div>
-                  <div className="text-center font-extrabold text-white text-lg leading-snug">{x.company || x.name}</div>
+                  <div className="text-center font-extrabold text-white text-lg leading-snug">{x.company || 'Company'}</div>
                 </button>
               ))}
             </div>
@@ -568,27 +570,75 @@ export default function EventPublicPage() {
         </div>
       </section>
 
-      {/* Exhibitor Modal */}
+      {/* Company Showcase Modal */}
       {modalExhibitor && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={() => setModalExhibitor(null)}>
-          <div className="bg-[#1c2331] rounded-xl border border-white/10 p-4 max-w-md w-full" onClick={(e)=>e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-3">
-              {modalExhibitor.logoUrl ? <img src={modalExhibitor.logoUrl} alt="logo" className="h-10 w-10 object-contain" /> : <div className="h-10 w-10 bg-white/10 rounded" />}
-              <div>
-                <div className="font-bold">{modalExhibitor.name}</div>
-                <div className="text-white/60 text-sm">Booth: {modalExhibitor.boothId || "-"}</div>
+          <div className="bg-[#1c2331] rounded-xl border border-white/10 p-6 max-w-lg w-full" onClick={(e)=>e.stopPropagation()}>
+            <div className="text-center mb-6">
+              {/* Large Company Logo */}
+              <div className="mb-6 flex justify-center">
+                {modalExhibitor.logoUrl ? (
+                  <img
+                    src={modalExhibitor.logoUrl}
+                    alt={`${modalExhibitor.company || 'Company'} Logo`}
+                    className="w-24 h-16 object-contain bg-white/10 rounded-lg p-2"
+                  />
+                ) : (
+                  <div className="w-24 h-16 bg-white/20 rounded-lg flex items-center justify-center">
+                    <svg className="w-12 h-12 text-white/50" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                    </svg>
+                  </div>
+                )}
+              </div>
+
+              {/* Prominent Company Name */}
+              <h1 className="text-2xl font-bold mb-2 text-white">
+                {modalExhibitor.company || 'Company Name'}
+              </h1>
+
+              {/* Booth Information */}
+              <div className="text-white/60 text-sm mb-4">
+                Booth: {modalExhibitor.boothId || 'Not specified'}
               </div>
             </div>
-            <div className="text-white/80 text-sm mb-3 text-justify">{modalExhibitor.description || ""}</div>
+
+            {/* Company Description */}
+            {modalExhibitor.description && (
+              <div className="mb-6">
+                <h3 className="font-semibold text-white mb-2">About the Company</h3>
+                <p className="text-white/80 text-sm leading-relaxed text-justify">
+                  {modalExhibitor.description}
+                </p>
+              </div>
+            )}
+
+            {/* Company Tags/Categories */}
             {modalExhibitor.tags?.length ? (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {modalExhibitor.tags.map((t, i) => (
-                  <span key={i} className="text-xs bg-white/10 text-white px-2 py-1 rounded">{t}</span>
-                ))}
+              <div className="mb-6">
+                <h3 className="font-semibold text-white mb-2">Categories</h3>
+                <div className="flex flex-wrap gap-2">
+                  {modalExhibitor.tags.map((tag, i) => (
+                    <span key={i} className="text-xs bg-white/10 text-white px-3 py-1 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
             ) : null}
-            <div className="flex justify-end">
-              <button className="px-4 py-2 rounded bg-white/10 hover:bg-white/20 border border-white/10 cursor-pointer transition-colors" onClick={() => setModalExhibitor(null)}>Close</button>
+
+            {/* Visit Booth Button */}
+            <div className="flex justify-center pt-4 border-t border-white/10">
+              <button
+                className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors flex items-center gap-2"
+                onClick={() => setModalExhibitor(null)}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Visit Booth
+              </button>
             </div>
           </div>
         </div>

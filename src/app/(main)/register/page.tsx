@@ -86,6 +86,39 @@ export default function Registration() {
       return;
     }
 
+    let logoUrl = '';
+
+    // Upload logo to Cloudinary if provided
+    if (formData.logoFile && formData.category === 'Exhibitor') {
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', formData.logoFile);
+        uploadFormData.append('upload_preset', 'event_logo_unsigned');
+
+        const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dp3fxdxyj/image/upload', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+
+        const uploadData = await uploadRes.json();
+
+        if (uploadData.secure_url) {
+          logoUrl = uploadData.secure_url;
+          console.log('✅ Logo uploaded to Cloudinary:', logoUrl);
+        } else {
+          console.error('❌ Cloudinary upload failed:', uploadData);
+          setSubmitError('Logo upload failed. Please try again.');
+          setIsSubmitting(false);
+          return;
+        }
+      } catch (uploadError) {
+        console.error('❌ Error uploading logo:', uploadError);
+        setSubmitError('Logo upload failed. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     try {
       // Check for duplicate email before creating account
       const existingUsersQuery = query(
@@ -148,7 +181,7 @@ export default function Registration() {
         address: '',
         industry: '',
         companySize: '',
-        logoUrl: '',
+        logoUrl: logoUrl || '',
         bio: '',
         linkedin: '',
         twitter: '',
@@ -180,7 +213,7 @@ export default function Registration() {
                 addedAt: new Date().toISOString(),
                 boothId: userData.boothId || '',
                 companyDescription: formData.companyDescription || '',
-                logoUrl: formData.logoPreview || userData.logoUrl || '',
+                logoUrl: logoUrl || userData.logoUrl || '',
                 name: userData.fullName,
                 description: formData.companyDescription || '',
                 tags: []

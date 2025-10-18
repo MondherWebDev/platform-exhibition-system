@@ -247,7 +247,7 @@ export default function FloorplanDesignerPage() {
                   }}>
                     <option value="">Select exhibitor...</option>
                     {exhibitors.map((x) => (
-                      <option key={x.id} value={x.id}>{x.name || x.id}</option>
+                      <option key={x.id} value={x.id}>{x.company || x.name || x.id}</option>
                     ))}
                   </select>
                 </div>

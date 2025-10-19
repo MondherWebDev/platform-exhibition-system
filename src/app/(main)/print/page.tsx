@@ -804,12 +804,29 @@ export default function BadgePrintingStation() {
                     'Website': a.website || ''
                   }));
 
+                  // Create CSV content with proper Arabic/UTF-8 support
+                  const escapeCsvField = (field: string) => {
+                    if (!field) return '';
+                    const stringField = String(field);
+                    // If field contains comma, quotes, or newlines, wrap in quotes and escape internal quotes
+                    if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+                      return `"${stringField.replace(/"/g, '""')}"`;
+                    }
+                    return stringField;
+                  };
+
                   const csvContent = [
-                    Object.keys(csvData[0]).join(','),
-                    ...csvData.map(row => Object.values(row).join(','))
+                    Object.keys(csvData[0]).map(escapeCsvField).join(','),
+                    ...csvData.map(row => Object.values(row).map(escapeCsvField).join(','))
                   ].join('\n');
 
-                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  // Add UTF-8 BOM for proper Arabic character display in Excel
+                  const BOM = '\uFEFF';
+                  const csvWithBOM = BOM + csvContent;
+
+                  const blob = new Blob([csvWithBOM], {
+                    type: 'text/csv;charset=utf-8;'
+                  });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;

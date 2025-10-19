@@ -178,8 +178,8 @@ export default function ProfileEditor() {
                 <input
                   type="text"
                   placeholder="Phone Number"
-                  value={profile.phone || ''}
-                  onChange={e => setProfile({ ...profile, phone: e.target.value })}
+                  value={profile.phone || profile.mobile || ''}
+                  onChange={e => setProfile({ ...profile, phone: e.target.value, mobile: e.target.value })}
                   className="p-3 rounded-lg bg-white text-gray-900 border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 />
                 <input
@@ -233,8 +233,8 @@ export default function ProfileEditor() {
               <div className="mt-3">
                 <textarea
                   placeholder="Company Description / Products & Services"
-                  value={profile.description || ''}
-                  onChange={e => setProfile({ ...profile, description: e.target.value })}
+                  value={profile.description || profile.companyDescription || ''}
+                  onChange={e => setProfile({ ...profile, description: e.target.value, companyDescription: e.target.value })}
                   className="w-full p-2.5 rounded-lg bg-white text-gray-900 border border-gray-300 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none text-sm"
                   rows={2}
                 />
@@ -299,7 +299,7 @@ export default function ProfileEditor() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Phone:</span>
-                    <span className="text-gray-800 break-words max-w-[60%] text-right">{profile.phone || 'Not provided'}</span>
+                    <span className="text-gray-800 break-words max-w-[60%] text-right">{profile.mobile || profile.phone || 'Not provided'}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Website:</span>
@@ -356,10 +356,10 @@ export default function ProfileEditor() {
             </div>
 
             {/* Description */}
-            {profile.description && (
+            {(profile.description || profile.companyDescription) && (
               <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">About</h3>
-                <p className="text-gray-700 text-sm leading-relaxed">{profile.description}</p>
+                <p className="text-gray-700 text-sm leading-relaxed">{profile.description || profile.companyDescription}</p>
               </div>
             )}
 

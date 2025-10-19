@@ -1,13 +1,10 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, addDoc, serverTimestamp, doc, setDoc, query, where, getDocs, getDoc } from "firebase/firestore";
-import { auth, db } from "../../../firebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { createUserBadge } from "../../../utils/badgeService";
+import { registrationService, RegistrationData, RegistrationResult } from "../../../utils/registrationService";
 
 export default function Registration() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegistrationData>({
     category: "",
     firstName: "",
     lastName: "",
@@ -15,16 +12,16 @@ export default function Registration() {
     mobile: "",
     countryCode: "+974",
     password: "",
-    confirmPassword: "",
     company: "",
     jobTitle: "",
     nationality: "",
     country: "",
     hearAbout: "",
     companyDescription: "",
-    logoFile: null as File | null,
-    logoPreview: ""
+    logoFile: null
   });
+
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
@@ -77,6 +74,7 @@ export default function Registration() {
     setIsSubmitting(true);
     setSubmitError("");
     setSubmitMessage("");
+    setRetryAfter(null);
 
     // Validate form
     const validationError = validateForm();
@@ -86,9 +84,8 @@ export default function Registration() {
       return;
     }
 
+    // Upload logo if provided (for exhibitors)
     let logoUrl = '';
-
-    // Upload logo to Cloudinary if provided
     if (formData.logoFile && formData.category === 'Exhibitor') {
       try {
         const uploadFormData = new FormData();
@@ -106,7 +103,6 @@ export default function Registration() {
           logoUrl = uploadData.secure_url;
           console.log('✅ Logo uploaded to Cloudinary:', logoUrl);
         } else {
-          console.error('❌ Cloudinary upload failed:', uploadData);
           setSubmitError('Logo upload failed. Please try again.');
           setIsSubmitting(false);
           return;
@@ -120,228 +116,47 @@ export default function Registration() {
     }
 
     try {
-      // Check for duplicate email before creating account
-      const existingUsersQuery = query(
-        collection(db, 'Users'),
-        where('email', '==', formData.email)
-      );
-      const existingUsersSnapshot = await getDocs(existingUsersQuery);
+      // Use the enhanced registration service
+      const result: RegistrationResult = await registrationService.registerUser(formData);
 
-      if (!existingUsersSnapshot.empty) {
-        const existingUser = existingUsersSnapshot.docs[0].data();
-        throw new Error(`An account with email ${formData.email} already exists (${existingUser.category}). Please use a different email address.`);
-      }
+      if (result.success) {
+        setSubmitMessage("Registration successful! Redirecting to sign in...");
 
-      // Create Firebase Authentication user
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const firebaseUser = userCredential.user;
-
-      // Determine position based on category if not provided
-      let position = 'Attendee';
-      if (formData.category === 'Exhibitor') {
-        position = 'Exhibitor Representative';
-      } else if (formData.category === 'Sponsor') {
-        position = 'Sponsor Representative';
-      } else if (formData.category === 'Speaker') {
-        position = 'Speaker';
-      } else if (formData.category === 'Hosted Buyer') {
-        position = 'Hosted Buyer';
-      } else if (formData.category === 'Agent') {
-        position = 'Event Agent';
-      } else if (formData.category === 'Organizer') {
-        position = 'Event Organizer';
-      } else if (formData.category === 'Admin') {
-        position = 'Administrator';
-      } else if (formData.category === 'VIP') {
-        position = 'VIP Guest';
-      } else if (formData.category === 'Media') {
-        position = 'Media Representative';
-      }
-
-      // Prepare user data for Firestore
-      const userData = {
-        uid: firebaseUser.uid,
-        email: formData.email,
-        fullName: `${formData.firstName} ${formData.lastName}`,
-        position: position,
-        company: formData.company || '',
-        category: formData.category,
-        mobile: formData.mobile,
-        countryCode: formData.countryCode,
-        nationality: formData.nationality || '',
-        country: formData.country || '',
-        hearAbout: formData.hearAbout,
-        createdAt: new Date().toISOString(),
-        isAgent: formData.category === 'Agent',
-        generatedPassword: formData.password,
-        loginEmail: formData.email,
-        contactEmail: formData.email,
-        contactPhone: formData.mobile,
-        website: '',
-        address: '',
-        industry: '',
-        companySize: '',
-        logoUrl: logoUrl || '',
-        bio: '',
-        companyDescription: formData.companyDescription || '',
-        linkedin: '',
-        twitter: '',
-        interests: '',
-        budget: '',
-        boothId: '',
-        sponsorTier: 'gold'
-      };
-
-      // Save user profile to Firestore
-      await setDoc(doc(db, 'Users', firebaseUser.uid), userData);
-
-      // Also add to event-specific collection if an event is active
-      const globalSettings = await getDoc(doc(db, 'AppSettings', 'global'));
-      if (globalSettings.exists()) {
-        const settings = globalSettings.data() as any;
-        console.log('🔍 Global settings:', settings);
-        console.log('🔍 Current eventId:', settings.eventId);
-
-        if (settings.eventId && settings.eventId !== 'default' && settings.eventId !== '') {
-          console.log('✅ Adding user to event-specific collection:', settings.eventId);
-
-          try {
-            // Add to event-specific collection based on category
-            if (formData.category === 'Exhibitor') {
-              const exhibitorData = {
-                ...userData,
-                eventId: settings.eventId,
-                addedAt: new Date().toISOString(),
-                boothId: userData.boothId || '',
-                companyDescription: formData.companyDescription || '',
-                logoUrl: logoUrl || '',
-                name: userData.fullName,
-                company: userData.company,
-                description: formData.companyDescription || '',
-                tags: []
-              };
-
-              await setDoc(doc(db, 'Events', settings.eventId, 'Exhibitors', firebaseUser.uid), exhibitorData);
-              console.log('✅ Successfully added exhibitor to event collection:', exhibitorData);
-            } else if (formData.category === 'Hosted Buyer') {
-              const buyerData = {
-                ...userData,
-                eventId: settings.eventId,
-                addedAt: new Date().toISOString(),
-                name: userData.fullName,
-                company: userData.company,
-                notes: ''
-              };
-
-              await setDoc(doc(db, 'Events', settings.eventId, 'HostedBuyers', firebaseUser.uid), buyerData);
-              console.log('✅ Successfully added hosted buyer to event collection');
-            } else if (formData.category === 'Sponsor') {
-              const sponsorData = {
-                ...userData,
-                eventId: settings.eventId,
-                addedAt: new Date().toISOString(),
-                name: userData.fullName,
-                tier: userData.sponsorTier || 'bronze',
-                logoUrl: formData.logoPreview || userData.logoUrl || '',
-                website: userData.website || '',
-                description: formData.companyDescription || ''
-              };
-
-              await setDoc(doc(db, 'Events', settings.eventId, 'Sponsors', firebaseUser.uid), sponsorData);
-              console.log('✅ Successfully added sponsor to event collection');
-            } else if (formData.category === 'Speaker') {
-              const speakerData = {
-                ...userData,
-                eventId: settings.eventId,
-                addedAt: new Date().toISOString(),
-                name: userData.fullName,
-                title: userData.position || 'Speaker',
-                company: userData.company || '',
-                bio: formData.companyDescription || userData.bio || '',
-                tags: []
-              };
-
-              await setDoc(doc(db, 'Events', settings.eventId, 'Speakers', firebaseUser.uid), speakerData);
-              console.log('✅ Successfully added speaker to event collection');
-            }
-          } catch (eventError) {
-            console.error('❌ Error adding user to event collection:', eventError);
-          }
-        } else {
-          console.log('❌ No valid eventId found in global settings - eventId:', settings.eventId);
-        }
-      } else {
-        console.log('❌ No global settings found');
-      }
-
-      // Create badge for the new user
-      try {
-        console.log('🎫 Creating badge for new user:', firebaseUser.uid, 'Category:', userData.category);
-        const badgeResult = await createUserBadge(firebaseUser.uid, {
-          name: userData.fullName,
-          role: userData.position,
-          company: userData.company,
-          category: userData.category
+        // Reset form
+        setFormData({
+          category: "",
+          firstName: "",
+          lastName: "",
+          email: "",
+          mobile: "",
+          countryCode: "+974",
+          password: "",
+          confirmPassword: "",
+          company: "",
+          jobTitle: "",
+          nationality: "",
+          country: "",
+          hearAbout: "",
+          companyDescription: "",
+          logoFile: null,
+          logoPreview: ""
         });
 
-        if (badgeResult) {
-          console.log('✅ Badge created successfully for new user');
-          // Update user document with badge reference
-          await setDoc(doc(db, 'Users', firebaseUser.uid), {
-            badgeId: badgeResult.id,
-            badgeCreated: true,
-            badgeCreatedAt: new Date(),
-            badgeStatus: 'active'
-          }, { merge: true });
-        } else {
-          throw new Error('Badge creation failed - registration cannot proceed');
+        // Redirect after success
+        setTimeout(() => {
+          router.push('/signin?message=Registration successful! Please sign in with your email and password.');
+        }, 2000);
+      } else {
+        setSubmitError(result.error || 'Registration failed');
+
+        if (result.retryAfter) {
+          setRetryAfter(result.retryAfter);
+          setSubmitMessage(`Please try again in ${result.retryAfter} seconds.`);
         }
-      } catch (badgeError) {
-        console.error('❌ Error creating badge for new user:', badgeError);
-        // Clean up the auth user if badge creation fails
-        await firebaseUser.delete();
-        throw new Error('Badge creation failed. Please try again.');
       }
-
-      console.log("User registered successfully:", firebaseUser.uid);
-      setSubmitMessage("Registration successful! Redirecting to sign in...");
-
-      // Reset form after successful submission
-      setFormData({
-        category: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        mobile: "",
-        countryCode: "+974",
-        password: "",
-        confirmPassword: "",
-        company: "",
-        jobTitle: "",
-        nationality: "",
-        country: "",
-        hearAbout: "",
-        companyDescription: "",
-        logoFile: null,
-        logoPreview: ""
-      });
-
-      // Sign out the user and redirect to signin page after successful registration
-      setTimeout(async () => {
-        try {
-          await auth.signOut();
-          router.push('/signin?message=Registration successful! Please sign in with your email and password.');
-        } catch (signOutError) {
-          console.error('Error signing out after registration:', signOutError);
-          // Even if sign out fails, redirect to signin page
-          router.push('/signin?message=Registration successful! Please sign in with your email and password.');
-        }
-      }, 2000);
-
     } catch (error) {
       console.error("Registration error:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      setSubmitError(errorMessage);
+      setSubmitError('An unexpected error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -1217,6 +1032,12 @@ export default function Registration() {
             </div>
           )}
 
+          {retryAfter && (
+            <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg">
+              Please wait {retryAfter} seconds before trying again.
+            </div>
+          )}
+
           {submitMessage && (
             <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg">
               {submitMessage}
@@ -1227,14 +1048,18 @@ export default function Registration() {
           <div className="flex justify-center mt-8">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || retryAfter !== null}
               className={`font-bold py-3 px-8 rounded-lg transition-all duration-200 flex items-center ${
-                isSubmitting
+                isSubmitting || retryAfter !== null
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
               } text-white`}
             >
-              {isSubmitting ? "Creating Account..." : "Create Account"}
+              {isSubmitting
+                ? "Creating Account..."
+                : retryAfter
+                  ? `Wait ${retryAfter}s`
+                  : "Create Account"}
             </button>
           </div>
         </form>

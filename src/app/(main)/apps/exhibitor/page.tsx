@@ -155,7 +155,7 @@ export default function ExhibitorLeadCapture() {
             industry: data.industry || '',
             companySize: data.companySize || '',
             boothId: data.boothId || '',
-            bio: data.companyDescription || data.description || data.bio || '',
+            bio: data.companyDescription || data.bio || '',
             logoUrl: data.logoUrl || ''
           });
 

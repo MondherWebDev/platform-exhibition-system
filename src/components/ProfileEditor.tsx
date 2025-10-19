@@ -522,7 +522,7 @@ export default function ProfileEditor() {
                     <span className="text-gray-600 flex-shrink-0">Phone:</span>
                     <span className="text-gray-800 break-words text-right flex-1 min-w-0">
                       {profile.countryCode && (profile.mobile || profile.phone)
-                        ? `+${profile.countryCode} ${profile.mobile || profile.phone}`
+                        ? `${profile.countryCode} ${profile.mobile || profile.phone}`.replace('++', '+')
                         : (profile.mobile || profile.phone || 'Not provided')}
                     </span>
                   </div>

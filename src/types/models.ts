@@ -130,6 +130,7 @@ export interface UserProfile extends BaseUser {
   // Contact Information
   contactEmail?: string;
   contactPhone?: string;
+  countryCode?: string;
   website?: string;
   address?: string;
 

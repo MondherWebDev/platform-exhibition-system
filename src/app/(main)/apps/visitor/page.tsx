@@ -387,64 +387,7 @@ export default function VisitorDashboard() {
             <p className="text-gray-600">Your personal event dashboard</p>
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div
-              className="cursor-pointer"
-              onClick={() => setShowFloorplan(true)}
-            >
-              <GlassCard className="p-4 text-center hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 group">
-                <FontAwesomeIcon icon={faMapMarkedAlt} className="text-2xl text-blue-600 mb-2 group-hover:text-blue-700 transition-colors" />
-                <h3 className="text-gray-800 font-semibold mb-1 group-hover:text-blue-700 transition-colors">Floorplan</h3>
-                <p className="text-gray-600 text-sm">Explore the venue</p>
-                <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-blue-600">Click to explore →</span>
-                </div>
-              </GlassCard>
-            </div>
 
-            <div
-              className="cursor-pointer"
-              onClick={() => setShowFullAgenda(true)}
-            >
-              <GlassCard className="p-4 text-center hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 group">
-                <FontAwesomeIcon icon={faCalendar} className="text-2xl text-green-600 mb-2 group-hover:text-green-700 transition-colors" />
-                <h3 className="text-gray-800 font-semibold mb-1 group-hover:text-green-700 transition-colors">Agenda</h3>
-                <p className="text-gray-600 text-sm">View event schedule</p>
-                <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-green-600">Click to view →</span>
-                </div>
-              </GlassCard>
-            </div>
-
-            <div
-              className="cursor-pointer"
-              onClick={() => setShowFullExhibitors(true)}
-            >
-              <GlassCard className="p-4 text-center hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 group">
-                <FontAwesomeIcon icon={faMap} className="text-2xl text-purple-600 mb-2 group-hover:text-purple-700 transition-colors" />
-                <h3 className="text-gray-800 font-semibold mb-1 group-hover:text-purple-700 transition-colors">Exhibitors</h3>
-                <p className="text-gray-600 text-sm">Browse all exhibitors</p>
-                <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-purple-600">Click to browse →</span>
-                </div>
-              </GlassCard>
-            </div>
-
-            <div
-              className="cursor-pointer"
-              onClick={() => setShowAIMatches(true)}
-            >
-              <GlassCard className="p-4 text-center hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 group">
-                <FontAwesomeIcon icon={faUsers} className="text-2xl text-orange-600 mb-2 group-hover:text-orange-700 transition-colors" />
-                <h3 className="text-gray-800 font-semibold mb-1 group-hover:text-orange-700 transition-colors">AI Matches</h3>
-                <p className="text-gray-600 text-sm">Smart networking</p>
-                <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-orange-600">Click to connect →</span>
-                </div>
-              </GlassCard>
-            </div>
-          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* My Profile */}
@@ -600,41 +543,7 @@ export default function VisitorDashboard() {
             </GlassCard>
           )}
 
-          {/* Exhibitors Preview */}
-          {exhibitors.length > 0 && (
-            <GlassCard className="p-6 mt-6">
-              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <FontAwesomeIcon icon={faUsers} className="text-purple-600" />
-                Featured Exhibitors
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {exhibitors.slice(0, 4).map((exhibitor: any) => (
-                  <div key={exhibitor.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center gap-3">
-                      {exhibitor.logoUrl ? (
-                        <img src={exhibitor.logoUrl} alt={exhibitor.name} className="w-12 h-12 object-contain rounded" />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                          <FontAwesomeIcon icon={faUsers} className="text-gray-500" />
-                        </div>
-                      )}
-                      <div>
-                        <h4 className="text-gray-800 font-semibold">{exhibitor.name}</h4>
-                        <p className="text-gray-600 text-sm">Booth: {exhibitor.boothId || 'TBA'}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {exhibitors.length > 4 && (
-                <div className="text-center mt-4">
-                  <button className="text-blue-600 hover:text-blue-700 text-sm">
-                    View all exhibitors →
-                  </button>
-                </div>
-              )}
-            </GlassCard>
-          )}
+
         </div>
       </div>
 

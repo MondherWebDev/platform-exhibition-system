@@ -518,9 +518,9 @@ export default function ProfileEditor() {
                     <span className="text-gray-600">Email:</span>
                     <span className="text-gray-800 break-words max-w-[60%] text-right">{profile.email || user.email || 'Not provided'}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Phone:</span>
-                    <span className="text-gray-800 break-words max-w-[60%] text-right">
+                  <div className="flex justify-between items-start gap-3">
+                    <span className="text-gray-600 flex-shrink-0">Phone:</span>
+                    <span className="text-gray-800 break-words text-right flex-1 min-w-0">
                       {profile.countryCode && (profile.mobile || profile.phone)
                         ? `+${profile.countryCode} ${profile.mobile || profile.phone}`
                         : (profile.mobile || profile.phone || 'Not provided')}

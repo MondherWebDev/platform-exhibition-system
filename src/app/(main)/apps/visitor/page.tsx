@@ -288,13 +288,7 @@ export default function VisitorPortal() {
                     <FontAwesomeIcon icon={faUsers} className="text-2xl text-purple-600" />
                     <span className="font-medium">Find Contacts</span>
                   </button>
-                  <button
-                    onClick={handleCheckIn}
-                    className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 flex flex-col items-center space-y-2"
-                  >
-                    <FontAwesomeIcon icon={faMapMarkerAlt} className="text-2xl text-orange-600" />
-                    <span className="font-medium">Check In</span>
-                  </button>
+
                 </div>
               </div>
             </div>
@@ -304,22 +298,25 @@ export default function VisitorPortal() {
               {/* Check-in Status */}
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Check-in Status</h3>
-                {userProfile.checkInStatus ? (
+                {checkInHistory.length > 0 ? (
                   <div className="text-center">
                     <div className="text-green-600 text-3xl mb-2">✅</div>
                     <p className="text-green-800 font-medium">Checked In</p>
-                    <p className="text-sm text-gray-500">Today at {new Date().toLocaleTimeString()}</p>
+                    <p className="text-sm text-gray-500">
+                      Last check-in: {checkInHistory[0]?.at?.toDate ?
+                        checkInHistory[0].at.toDate().toLocaleDateString() : 'Today'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Checked in by agent at gate
+                    </p>
                   </div>
                 ) : (
                   <div className="text-center">
                     <div className="text-gray-400 text-3xl mb-2">⏳</div>
                     <p className="text-gray-600 font-medium">Not Checked In</p>
-                    <button
-                      onClick={handleCheckIn}
-                      className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Check In Now
-                    </button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Please visit the registration desk to get checked in
+                    </p>
                   </div>
                 )}
               </div>
@@ -395,6 +392,12 @@ export default function VisitorPortal() {
                     <p className="text-gray-600">{userProfile.company}</p>
                     <p className="text-sm text-gray-500">Badge ID: {userProfile.badgeId}</p>
                     <p className="text-sm text-gray-500">Visitor</p>
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-xs text-blue-800">
+                        <strong>How to use:</strong> Show this QR code to agents at the entrance for check-in,
+                        or to exhibitors when visiting their booths.
+                      </p>
+                    </div>
                   </div>
 
                   {/* Action Buttons */}

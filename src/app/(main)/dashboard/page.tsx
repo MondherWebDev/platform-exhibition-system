@@ -1158,6 +1158,15 @@ export default function CentralDashboard() {
               <h4 className="text-white font-semibold text-sm">Print Station</h4>
               <p className="text-slate-200 text-xs">{stats.badgesPrinted} printed</p>
             </a>
+
+            <button
+              onClick={() => window.location.href = '/agenda'}
+              className="bg-gradient-to-br from-indigo-600/20 to-indigo-800/20 rounded-lg p-4 border border-indigo-500/30 hover:border-indigo-400/50 transition-colors text-center w-full"
+            >
+              <FontAwesomeIcon icon={faCalendar} className="text-indigo-400 text-2xl mb-2" />
+              <h4 className="text-white font-semibold text-sm">Agenda Manager</h4>
+              <p className="text-indigo-200 text-xs">Create & manage conference agenda</p>
+            </button>
           </div>
         </div>
 

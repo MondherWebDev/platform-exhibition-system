@@ -170,8 +170,11 @@ interface Attendee {
   badgeId?: string;
   photoUrl?: string;
   phone?: string;
+  mobile?: string;
+  countryCode?: string;
   industry?: string;
   linkedin?: string;
+  website?: string;
 }
 
 interface PrintJob {
@@ -734,8 +737,13 @@ export default function BadgePrintingStation() {
                     'Position': a.position,
                     'Category': a.category,
                     'Badge Status': a.badgeStatus || 'pending',
-                    'Phone': a.phone || '',
-                    'Industry': a.industry || ''
+                    'Phone': a.countryCode && (a.mobile || a.phone)
+                      ? `${a.countryCode} ${a.mobile || a.phone}`.replace('++', '+')
+                      : (a.mobile || a.phone || ''),
+                    'Industry': a.industry || '',
+                    'Country Code': a.countryCode || '',
+                    'LinkedIn': a.linkedin || '',
+                    'Website': a.website || ''
                   }));
 
                   const csvContent = [

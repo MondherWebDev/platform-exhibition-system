@@ -491,7 +491,10 @@ export default function MatchmakingEngine() {
               Back to Dashboard
             </button>
             <button
-              onClick={() => auth.signOut()}
+              onClick={async () => {
+                await auth.signOut();
+                window.location.href = '/signin';
+              }}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Sign Out

@@ -544,12 +544,15 @@ export default function AgentCheckinSystem() {
                 Current role: <span className="capitalize text-white">{userProfile?.category || 'Unknown'}</span>
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <button
-                  onClick={() => window.location.href = '/dashboard'}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors"
-                >
-                  Back to Dashboard
-                </button>
+            <button
+              onClick={async () => {
+                await auth.signOut();
+                window.location.href = '/signin';
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Sign Out
+            </button>
                 <button
                   onClick={() => auth.signOut()}
                   className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"

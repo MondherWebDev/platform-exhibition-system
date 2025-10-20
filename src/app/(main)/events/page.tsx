@@ -14,6 +14,8 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
+import { dataUploadService, DataItem } from "../../../utils/dataUploadService";
+import { CategoryCard } from "../../../components/CategoryCard";
 
 // Event metadata stored at Events/{eventId}
 // Additional content under subcollections: Exhibitors, Sponsors, Speakers, HostedBuyers, Sessions
@@ -54,6 +56,16 @@ export default function OrganizerEventsPage() {
   const [form, setForm] = useState<EventMeta>({ id: "", name: "", startDate: "", endDate: "", startTime: "", endTime: "", location: "", description: "", bannerLogoUrl: "", bannerImageUrl: "", active: false, theme: { primary: "#0d6efd", secondary: "#fd7e14" } });
   const [busy, setBusy] = useState<boolean>(false);
   const [info, setInfo] = useState<string>("");
+
+  // Data upload state
+  const [uploadedData, setUploadedData] = useState<Record<string, DataItem[]>>({
+    exhibitors: [],
+    sponsors: [],
+    "hosted-buyers": [],
+    speakers: []
+  });
+  const [loadingData, setLoadingData] = useState<boolean>(false);
+  const [showDataSections, setShowDataSections] = useState<boolean>(false);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (u) => {
@@ -223,6 +235,33 @@ export default function OrganizerEventsPage() {
     return data.secure_url as string;
   };
 
+  // Load uploaded data for all categories
+  const loadUploadedData = async () => {
+    setLoadingData(true);
+    try {
+      const allData = await dataUploadService.getAllData();
+      setUploadedData(allData);
+      setShowDataSections(true);
+    } catch (error) {
+      console.error("Error loading uploaded data:", error);
+      setInfo("Failed to load uploaded data");
+      setTimeout(() => setInfo(""), 3000);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Handle card actions
+  const handleEditCard = (id: string) => {
+    setInfo(`Edit functionality for ${id} - Coming soon!`);
+    setTimeout(() => setInfo(""), 2000);
+  };
+
+  const handleDeleteCard = async (id: string) => {
+    setInfo(`Delete functionality for ${id} - Coming soon!`);
+    setTimeout(() => setInfo(""), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#0f1419] text-white">
       <div className="max-w-7xl mx-auto p-4">
@@ -349,6 +388,125 @@ export default function OrganizerEventsPage() {
                 <li>Use the Floorplan Designer at /dashboard/organizer/floorplan-designer to draw and publish the floorplan.</li>
               </ul>
             </div>
+          </div>
+        </div>
+
+        {/* Data Upload Section Toggle */}
+        <div className="mt-8">
+          <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Uploaded Data Management</h2>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => router.push('/data-upload')}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  📊 Go to Data Upload
+                </button>
+                <button
+                  onClick={showDataSections ? () => setShowDataSections(false) : loadUploadedData}
+                  disabled={loadingData}
+                  className="bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white px-4 py-2 rounded text-sm"
+                >
+                  {loadingData ? "Loading..." : showDataSections ? "Hide Data" : "Show Uploaded Data"}
+                </button>
+              </div>
+            </div>
+
+            {showDataSections && (
+              <div className="space-y-8">
+                {/* Exhibitors Section */}
+                {uploadedData.exhibitors.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      🏢 Exhibitors ({uploadedData.exhibitors.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {uploadedData.exhibitors.map((item) => (
+                        <CategoryCard
+                          key={item.id}
+                          item={item}
+                          onEdit={handleEditCard}
+                          onDelete={handleDeleteCard}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Sponsors Section */}
+                {uploadedData.sponsors.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      ⭐ Sponsors ({uploadedData.sponsors.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {uploadedData.sponsors.map((item) => (
+                        <CategoryCard
+                          key={item.id}
+                          item={item}
+                          onEdit={handleEditCard}
+                          onDelete={handleDeleteCard}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hosted Buyers Section */}
+                {uploadedData["hosted-buyers"].length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      🛍️ Hosted Buyers ({uploadedData["hosted-buyers"].length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {uploadedData["hosted-buyers"].map((item) => (
+                        <CategoryCard
+                          key={item.id}
+                          item={item}
+                          onEdit={handleEditCard}
+                          onDelete={handleDeleteCard}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Speakers Section */}
+                {uploadedData.speakers.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      🎤 Speakers ({uploadedData.speakers.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {uploadedData.speakers.map((item) => (
+                        <CategoryCard
+                          key={item.id}
+                          item={item}
+                          onEdit={handleEditCard}
+                          onDelete={handleDeleteCard}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Data Message */}
+                {Object.values(uploadedData).every(arr => arr.length === 0) && (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">📋</div>
+                    <h3 className="text-lg font-semibold text-white mb-2">No Data Uploaded Yet</h3>
+                    <p className="text-gray-400 mb-4">Upload Excel files with exhibitor, sponsor, hosted buyer, or speaker data to see them displayed here as cards.</p>
+                    <button
+                      onClick={() => router.push('/data-upload')}
+                      className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2 rounded"
+                    >
+                      Go to Data Upload
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

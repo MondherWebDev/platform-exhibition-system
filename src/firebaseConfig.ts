@@ -111,6 +111,7 @@ auth.onAuthStateChanged((user) => {
 // Firestore with long polling to better handle restrictive networks/proxies
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
+  ignoreUndefinedProperties: true,
 });
 // Reduce Firestore console noise in dev when offline
 setLogLevel('error');

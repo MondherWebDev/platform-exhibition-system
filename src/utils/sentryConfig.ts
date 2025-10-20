@@ -44,7 +44,7 @@ if (SENTRY_DSN) {
 
     // Performance monitoring integrations
     integrations: [
-      Sentry.httpIntegration(),
+      Sentry.httpContextIntegration(),
       Sentry.browserTracingIntegration(),
     ],
 

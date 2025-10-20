@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../firebaseConfig';
 import { collection, getDocs, query, where, orderBy, limit, doc, getDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { SentryService } from '../../../utils/sentryConfig';
 
 export async function GET(req: NextRequest) {
   try {
@@ -65,6 +66,12 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Users retrieval error:', error);
+    SentryService.reportUserError(
+      error as Error,
+      'Failed to retrieve users',
+      undefined,
+      { error: error instanceof Error ? error.message : 'Unknown error' }
+    );
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

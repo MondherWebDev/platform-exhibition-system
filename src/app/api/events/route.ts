@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../firebaseConfig';
 import { collection, getDocs, query, where, orderBy, limit, doc, getDoc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { SentryService } from '../../../utils/sentryConfig';
 
 export async function GET(req: NextRequest) {
   try {
@@ -55,6 +56,12 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('Events retrieval error:', error);
+    SentryService.reportUserError(
+      error as Error,
+      'Failed to retrieve events',
+      undefined,
+      { error: error instanceof Error ? error.message : 'Unknown error' }
+    );
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -109,6 +116,12 @@ export async function POST(req: NextRequest) {
 
   } catch (error) {
     console.error('Event creation error:', error);
+    SentryService.reportUserError(
+      error as Error,
+      'Failed to create event',
+      undefined,
+      { error: error instanceof Error ? error.message : 'Unknown error' }
+    );
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to create event' },
       { status: 500 }

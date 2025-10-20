@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { registrationService, RegistrationData, RegistrationResult } from "../../../utils/registrationService";
 
 export default function Registration() {
@@ -168,11 +169,13 @@ export default function Registration() {
       <div className="bg-gradient-to-r from-teal-500 to-cyan-600 py-1">
         <div className="container mx-auto px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center">
-            <img
-              src="/QTM 2025 Logo-04.png"
-              alt="QTM 2024 Logo"
-              className="w-48 sm:w-56 lg:w-64 h-auto"
-            />
+            <Link href="/events">
+              <img
+                src="/QTM 2025 Logo-04.png"
+                alt="QTM 2024 Logo"
+                className="w-48 sm:w-56 lg:w-64 h-auto cursor-pointer hover:opacity-80 transition-opacity"
+              />
+            </Link>
           </div>
           <div className="flex space-x-2 sm:space-x-3">
             <button

@@ -1,0 +1,22 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "npm run start"
+healthcheckPath = "/"
+
+[[services]]
+name = "event-platform"
+type = "web"
+port = 3000
+
+[services.env]
+NODE_ENV = "production"
+
+[[services]]
+name = "postgres"
+type = "postgres"
+ipAllowList = [] # only accessible by other services
+
+[services.env]
+DATABASE_URL = "${{Postgres.DATABASE_URL}}"

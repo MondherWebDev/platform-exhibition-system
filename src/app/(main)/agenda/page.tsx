@@ -40,7 +40,7 @@ import {
   faRefresh,
   faLightbulb,
   faMicrophone,
-  faPresentation,
+  faChalkboardTeacher,
   faVideo,
   faCoffee,
   faUtensils,
@@ -447,7 +447,7 @@ export default function AgendaManager() {
       case 'networking': return faHandshake;
       case 'break': return faCoffee;
       case 'meal': return faUtensils;
-      case 'presentation': return faPresentation;
+      case 'presentation': return faChalkboardTeacher;
       case 'qanda': return faQuestion;
       default: return faCalendar;
     }

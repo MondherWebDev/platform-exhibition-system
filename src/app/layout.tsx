@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import '../utils/sentryConfig' // Initialize Sentry
 import ClientOnly from '../components/ClientOnly'
-import Logo from '../components/Logo'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,7 +25,6 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ClientOnly>
-          <Logo />
           {children}
         </ClientOnly>
       </body>

@@ -212,12 +212,7 @@ export default function Registration() {
                 >
                   <option value="">Select Category</option>
                   <option value="Visitor">Visitor</option>
-                  <option value="Exhibitor">Exhibitor</option>
-                  <option value="Speaker">Speaker</option>
-                  <option value="Sponsor">Sponsor</option>
                   <option value="Media">Media</option>
-                  <option value="Hosted Buyer">Hosted Buyer</option>
-                  <option value="VIP">VIP</option>
                 </select>
               </div>
 

@@ -71,13 +71,13 @@ import { getAnalytics } from 'firebase/analytics';
 import { getMessaging } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCMjNjOG-rdz7WUJOgPdi9ODWkpHqowbkI",
-  authDomain: "smart-event-management-d71a4.firebaseapp.com",
-  projectId: "smart-event-management-d71a4",
-  storageBucket: "smart-event-management-d71a4.appspot.com",
-  messagingSenderId: "411158147657",
-  appId: "1:411158147657:web:8c302fdfc7be9e682e0598",
-  measurementId: "G-VS4QJY53YE"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyCMjNjOG-rdz7WUJOgPdi9ODWkpHqowbkI",
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "smart-event-management-d71a4.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "smart-event-management-d71a4",
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "smart-event-management-d71a4.appspot.com",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "411158147657",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:411158147657:web:8c302fdfc7be9e682e0598",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-VS4QJY53YE"
 };
 
 const app = initializeApp(firebaseConfig);

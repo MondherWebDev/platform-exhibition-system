@@ -598,7 +598,7 @@ export default function AgentCheckinSystem() {
             <button
               onClick={() => {
                 auth.signOut();
-                window.location.href = 'http://localhost:3000/signin';
+                window.location.href = '/signin';
               }}
               className="bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded text-xs sm:text-sm font-semibold transition-colors"
             >

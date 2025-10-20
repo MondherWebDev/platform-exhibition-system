@@ -326,7 +326,7 @@ export default function VisitorDashboard() {
             <button
               onClick={async () => {
                 await auth.signOut();
-                window.location.href = 'http://localhost:3000/signin';
+                window.location.href = '/signin';
               }}
               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-semibold transition-colors"
             >

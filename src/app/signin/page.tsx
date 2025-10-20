@@ -15,11 +15,16 @@ export default function SignIn() {
       <div className="bg-gradient-to-r from-teal-500 to-cyan-600 py-1">
         <div className="container mx-auto px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center">
-            <img
-              src="/QTM 2025 Logo-04.png"
-              alt="QTM 2025 Logo"
-              className="w-32 sm:w-40 lg:w-48 h-auto"
-            />
+            <button
+              onClick={() => router.push('/events')}
+              className="focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 rounded"
+            >
+              <img
+                src="/QTM 2025 Logo-04.png"
+                alt="QTM 2025 Logo"
+                className="w-32 sm:w-40 lg:w-48 h-auto cursor-pointer hover:opacity-80 transition-opacity duration-200"
+              />
+            </button>
           </div>
           <div className="flex space-x-2 sm:space-x-3">
             <button

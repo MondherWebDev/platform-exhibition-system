@@ -1167,6 +1167,15 @@ export default function CentralDashboard() {
               <h4 className="text-white font-semibold text-sm">Agenda Manager</h4>
               <p className="text-indigo-200 text-xs">Create & manage conference agenda</p>
             </button>
+
+            <button
+              onClick={() => window.location.href = '/data-upload'}
+              className="bg-gradient-to-br from-teal-600/20 to-teal-800/20 rounded-lg p-4 border border-teal-500/30 hover:border-teal-400/50 transition-colors text-center w-full"
+            >
+              <FontAwesomeIcon icon={faDownload} className="text-teal-400 text-2xl mb-2" />
+              <h4 className="text-white font-semibold text-sm">Data Upload</h4>
+              <p className="text-teal-200 text-xs">Upload Excel data for all categories</p>
+            </button>
           </div>
         </div>
 
